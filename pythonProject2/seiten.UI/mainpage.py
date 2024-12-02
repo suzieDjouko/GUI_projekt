@@ -41,7 +41,7 @@ class ReiseApp(QMainWindow):
         self.sea_combo = QComboBox()
         self.sea_combo.addItem('All Sea')
         self.sea_combo.addItems(getSea(self.dataFrame))
-        self.sea_combo.currentTextChanged.connect(lambda text:self.filter_by_sea(text))
+        self.sea_combo.currentTextChanged.connect(self.on_sea_changed)
         sea_selection_layout.addWidget(QLabel("Meerart:"))
         sea_selection_layout.addWidget(self.sea_combo)
         layout.addLayout(sea_selection_layout)
@@ -161,14 +161,18 @@ class ReiseApp(QMainWindow):
 
         # Filtre par mer
         if sea != "All Sea":
-            filtered_data = filtered_data[filtered_data['Meerart'] == sea]
+            self.filter_by_sea(sea)
+            #filtered_data = filtered_data[filtered_data['Meerart'] == sea]
+            update_city_selection(
+                filtered_data, self.hafenstaedte_folder, sea, nights, self.city_selection_layout
+            )
             print(f"Données filtrées par mer ({sea}): {len(filtered_data)} lignes")
 
         # Filtre par nuits
         if nights:
             filtered_data = getVacanciesByNigthRange(filtered_data, nights)
             update_city_selection(
-                self.dataFrame, self.hafenstaedte_folder, sea, nights, self.city_selection_layout
+                filtered_data, self.hafenstaedte_folder, sea, nights, self.city_selection_layout
             )
             print(f"Données filtrées par nuits ({nights}): {len(filtered_data)} lignes")
 
@@ -182,7 +186,7 @@ class ReiseApp(QMainWindow):
            filtered_data = self.apply_filters(sea, nights)
            # Mettre à jour les sélections de villes (si nécessaire)
            update_city_selection(
-               self.dataFrame, self.hafenstaedte_folder, sea, nights, self.city_selection_layout
+               filtered_data, self.hafenstaedte_folder, sea, nights, self.city_selection_layout
            )
            # Mettre à jour le tableau avec les données filtrées
            update_table(self.table, filtered_data)
@@ -196,6 +200,9 @@ class ReiseApp(QMainWindow):
             print(f"Critères mis à jour - Sea: {sea}, Nights: {nights}")
             filtered_data = self.apply_filters(sea, nights)
             # Mettre à jour le tableau avec les données filtrées
+            update_city_selection(
+                filtered_data, self.hafenstaedte_folder, sea, nights, self.city_selection_layout
+            )
             update_table(self.table, filtered_data)
         except Exception as e:
             print(f"Error in on_criteria_changed: {e}")
