@@ -16,7 +16,7 @@ class VoyageApp(QMainWindow):
         self.setGeometry(100, 100, 1200, 800)
 
         # Charger les données Excel
-        self.data_file = "../Schiffsreisen_cleaned.xlsx"  # Remplacez par le chemin correct
+        self.data_file = "../Schiffsreisen.xlsx"  # Remplacez par le chemin correct
         self.df = None  # Initialisation des données
         self.load_data()
 

@@ -1,27 +1,36 @@
 import sys
 import os
-import pandas as pd
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QLabel, QMessageBox,
-    QTableWidget, QTableWidgetItem, QScrollArea, QGridLayout, QPushButton, QComboBox, QSpinBox
+    QTableWidget, QTableWidgetItem, QScrollArea, QGridLayout, QPushButton, QComboBox, QSpinBox, QListWidgetItem,
+    QListWidget
 )
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QSize
 
 
+from ..backend.index import loadData_and_clean_data
+
+
+
 class VoyageApp(QMainWindow):
     def __init__(self):
         super().__init__()
+
         self.setWindowTitle("Sélection de voyages en bateau")
-        self.setGeometry(100, 100, 1200, 800)
+        self.setGeometry(100, 100, 1900, 1200)
 
-        # Charger les données Excel
-        self.data_file = "../Schiffsreisen_cleaned.xlsx"  # Remplacez par le chemin correct
-        self.df = None  # Initialisation des données
-        self.load_data()
-
+        file_path = "../Schiffsreisen.xlsx"  # Remplacez par le chemin correct
+        self.dataFrame = loadData_and_clean_data(file_path)
+        if self.dataFrame is not None:
+            print(self.dataFrame.head())  # Afficher un aperçu des données nettoyées
+        else:
+            print("Aucune donnée valide chargée.")
+            
+            
         # Définir les chemins des dossiers
+        self.hafenstaedte_folder = "../images/Hafenstaedte"
         self.schiffstyp_folder = "../images/Schiffstypen"  # Types de navires
         self.cabintype_folder = "../images/Kabinentypen"  # Types de cabines
 
@@ -32,17 +41,8 @@ class VoyageApp(QMainWindow):
         # Initialiser l'interface
         self.init_ui()
 
-    def load_data(self):
-        """Charger les données depuis l'Excel et les nettoyer."""
-        try:
-            self.df = pd.read_excel(self.data_file)
-            self.df["Meerart"] = self.df["Meerart"].fillna("Inconnu").astype(str)
-            self.df["Besuchte_Städte"] = self.df["Besuchte_Städte"].fillna("Inconnu").astype(str)
-            self.df["Übernachtungen"] = self.df["Übernachtungen"].fillna(0).astype(int)
-        except FileNotFoundError:
-            self.show_error(f"Fichier introuvable : {self.data_file}")
-        except Exception as e:
-            self.show_error(f"Impossible de charger les données : {e}")
+    
+
 
     def init_ui(self):
         layout = QVBoxLayout()
@@ -50,23 +50,31 @@ class VoyageApp(QMainWindow):
         # Section des types de mer
         sea_selection_layout = QHBoxLayout()
         self.sea_combo = QComboBox()
-        self.sea_combo.addItem("Toutes")
-        self.sea_combo.addItems(self.df["Meerart"].unique())
-        sea_selection_layout.addWidget(QLabel("Mer:"))
+        self.sea_combo.addItem("All Sea")
+        self.sea_combo.addItems(self.dataFrame["Meerart"].unique())
+        self.sea_combo.currentTextChanged.connect(self.filter_results)
+        sea_selection_layout.addWidget(QLabel("Meer:"))
         sea_selection_layout.addWidget(self.sea_combo)
         layout.addLayout(sea_selection_layout)
 
         # Section du nombre de nuits
         nights_layout = QHBoxLayout()
         self.nights_spin = QSpinBox()
-        self.nights_spin.setRange(1, 30)
-        nights_layout.addWidget(QLabel("Nombre de nuits:"))
+        #self.nights_save_button = QPushButton('save')
+        self.nights_spin.setRange(2, 30)
+        self.nights_spin.setValue(2)
+        self.nights_spin.setSuffix(" nights")
+        nights_layout.addWidget(QLabel("Anzahl von Übernachtung"))
+        self.nights_spin.valueChanged.connect(self.filter_results)
+        #self.nights_save_button.clicked.connect(self.create_city_selection)
         nights_layout.addWidget(self.nights_spin)
+        #nights_layout.addWidget(self.nights_save_button)
         layout.addLayout(nights_layout)
 
         # Section des villes
-        layout.addWidget(QLabel("Villes"))
-        city_selection_scroll = self.create_city_selection()
+        city_label = QLabel('Villes')
+        layout.addWidget(city_label)
+        city_selection_scroll = self.create_city_selection(self.nights_spin.value)
         layout.addWidget(city_selection_scroll)
 
         # Section des types de navires
@@ -113,10 +121,15 @@ class VoyageApp(QMainWindow):
         buttons_layout.addWidget(search_button)
         layout.addLayout(buttons_layout)
 
+        results_label = QLabel("Résultats :")
+        layout.addWidget(results_label)
+        self.results_list = QListWidget()
+        layout.addWidget(self.results_list)
+
         # Tableau des résultats
         self.table = QTableWidget()
-        self.table.setColumnCount(len(self.df.columns))
-        self.table.setHorizontalHeaderLabels(self.df.columns)
+        self.table.setColumnCount(len(self.dataFrame.columns))
+        self.table.setHorizontalHeaderLabels(self.dataFrame.columns)
         layout.addWidget(self.table)
 
         # Configurer la fenêtre principale
@@ -148,8 +161,10 @@ class VoyageApp(QMainWindow):
                 if os.path.exists(image_path):
                     break
             else:
-                QMessageBox.warning(self, "Erreur", f"Aucune image trouvée pour le navire : {ship_name}.")
-                return
+                image_path = os.path.join(self.schiffstyp_folder, "default.jpg")
+
+                #QMessageBox.warning(self, "Erreur", f"Aucune image trouvée pour le navire : {ship_name}.")
+                #return
 
         pixmap = QPixmap(image_path).scaled(300, 200, Qt.KeepAspectRatio)
         self.ship_image_label.setPixmap(pixmap)
@@ -178,28 +193,51 @@ class VoyageApp(QMainWindow):
                 if os.path.exists(image_path):
                     break
             else:
-                QMessageBox.warning(self, "Erreur", f"Aucune image trouvée pour la cabine : {cabin_name}.")
-                return
+                image_path = os.path.join(self.schiffstyp_folder, "default.jpg")
+
+            # QMessageBox.warning(self, "Erreur", f"Aucune image trouvée pour la cabine : {cabin_name}.")
+                #return
 
         pixmap = QPixmap(image_path).scaled(300, 200, Qt.KeepAspectRatio)
         self.cabin_image_label.setPixmap(pixmap)
 
-    def create_city_selection(self):
+    def create_city_selection(self, selected_nights = None):
         """Créer une section de sélection des villes avec des boutons images."""
         scroll_area = QScrollArea()
         grid_layout = QGridLayout()
-
         row, col = 0, 0
-        unique_cities = self.df["Besuchte_Städte"].dropna().unique()
-        cities = set(city.strip() for cities in unique_cities for city in cities.split(","))
+        selected_nights = self.nights_spin.value() or None
+        print(f"Selected nights: {selected_nights}")  # Debug
+        #cities = self.dataFrame["Besuchte_Städte"].dropna().unique()
+        #cities = set(city.strip() for cities in cities for city in cities.split(","))
+       # self.display_unique_cities(filtered_df)
+        unique_cities = self.update_city_choice(selected_nights)
+        print(f"Unique cities: {unique_cities}")  # Debug
 
-        for city in sorted(cities):
+        if not unique_cities:
+            print(f"Aucune ville trouvée pour {selected_nights} nuits.")
+            no_city_label = QLabel("Aucune ville disponible pour le nombre de nuits sélectionné.")
+            no_city_label.setAlignment(Qt.AlignCenter)
+            scroll_area.setWidget(no_city_label)
+            return scroll_area
+
+        for city in sorted(unique_cities):
+           # normalized_city = re.sub(r'\s+', ' ', city.strip())  # Enlever les espaces supplémentaires
+            #normalized_city = normalized_city.lower().replace(" ","")  # Transformer en minuscule et enlever les espaces
+
+            image_path = os.path.join(self.hafenstaedte_folder, f"{city}.jpg")
+
+
+            if not os.path.exists(image_path):
+                #print(f"Image not found for city '{city}' (normalized: '{normalized_city}')")
+                image_path = os.path.join(self.hafenstaedte_folder, "default.jpg")
+
             # Créer un bouton image
             btn = QPushButton()
             btn.setCheckable(True)
             btn.setStyleSheet("border: none;")
-            btn.setIcon(QIcon(f"images/{city}.png"))  # Utilisation de QIcon
-            btn.setIconSize(QSize(100, 100))  # Taille de l'image
+            btn.setIcon(QIcon(image_path))  # Utilisation de QIcon
+            btn.setIconSize(QSize(300, 250))  # Taille de l'image
 
             # Ajouter un événement de clic pour la sélection
             btn.clicked.connect(lambda _, c=city, b=btn: self.toggle_city_selection(c, b))
@@ -228,6 +266,8 @@ class VoyageApp(QMainWindow):
         scroll_area.setWidgetResizable(True)
         return scroll_area
 
+
+
     def toggle_city_selection(self, city_name, btn):
         """Ajouter ou retirer une ville de la sélection et mettre à jour l'apparence."""
         if btn.isChecked():
@@ -236,14 +276,14 @@ class VoyageApp(QMainWindow):
         else:
             self.selected_cities.remove(city_name)
             btn.setStyleSheet("border: 1px solid black; background-color: none;")
+        self.filter_results()
 
     def reset_form(self):
         """Réinitialiser tous les choix du formulaire."""
         # Réinitialiser la sélection des mers
         self.sea_combo.setCurrentIndex(0)
-
         # Réinitialiser le nombre de nuits
-        self.nights_spin.setValue(1)
+        self.nights_spin.setValue(2)
 
         # Réinitialiser la sélection des villes
         self.selected_cities.clear()
@@ -266,37 +306,115 @@ class VoyageApp(QMainWindow):
 
     def filter_results(self):
         """Filtrer les résultats en fonction des critères sélectionnés."""
-        sea = self.sea_combo.currentText()
-        nights = self.nights_spin.value()
-        cities = self.selected_cities
+        selected_sea = self.sea_combo.currentText()
+        selected_nights = self.nights_spin.value()
+        selected_cities = list(self.selected_cities)
+        min_nights = selected_nights - 2
+        max_nights = selected_nights + 2
 
-        filtered_df = self.df.copy()
+        # Appliquer les filtres sur le DataFrame
+        filtered_df = self.dataFrame.copy()
+        if selected_sea != "All Sea":
+            filtered_df = filtered_df[filtered_df["Meerart"] == selected_sea]
 
-        if sea != "Toutes":
-            filtered_df = filtered_df[filtered_df["Meerart"] == sea]
+        if selected_nights is not None and isinstance(selected_nights, (int, float)):
+            filtered_df = filtered_df[(filtered_df["Übernachtungen"] >= min_nights) &
+                                      (filtered_df["Übernachtungen"] <= max_nights)]
+        else:
+            print("Aucune sélection valide pour 'selected_nights'")
 
-        filtered_df = filtered_df[(filtered_df["Übernachtungen"] >= (nights - 2)) &
-                                  (filtered_df["Übernachtungen"] <= (nights + 2))]
+        if selected_cities:
+            filtered_df = filtered_df[
+                filtered_df["Besuchte_Städte"].apply(lambda x: any(city in x for city in selected_cities))
+            ]
+        if filtered_df.empty:
+            print(f"Aucune ville trouvée pour {selected_nights} nuits.")
+        else:
+            # Afficher les villes trouvées
+            print(f"Villes trouvées pour {selected_nights} nuits :")
+            print(filtered_df["Besuchte_Städte"].unique())
 
-        if cities:
-            filtered_df = filtered_df[filtered_df["Besuchte_Städte"].apply(
-                lambda x: all(city in (x or "") for city in cities))]
+        # Mettre à jour la liste des résultats
+        self.results_list.clear()
+        for _, row in filtered_df.iterrows():
+            item = QListWidgetItem(
+                f"Voyage: {row['ReiseName']} | Mer: {row['Meerart']} | Nuits: {row['Übernachtungen']}")
+            self.results_list.addItem(item)
+
+        # Mettre à jour le tableau des résultats
+        self.table.setRowCount(len(filtered_df))
+        for row_idx, row in enumerate(filtered_df.itertuples(index=False)):
+            for col_idx, value in enumerate(row):
+                self.table.setItem(row_idx, col_idx, QTableWidgetItem(str(value)))
+
+        print(f"Type de selected_nights : {type(selected_nights)}, Valeur : {selected_nights}")
 
         self.update_table(filtered_df)
 
-    def update_table(self, df):
-        """Mettre à jour le tableau avec les résultats filtrés."""
-        self.table.setRowCount(len(df))
-        self.table.setColumnCount(len(df.columns))
-        self.table.setHorizontalHeaderLabels(df.columns)
+        #self.update_table(filtered_df)
+        #filtered_cities = self.display_unique_cities(filtered_df)
+        #print("Villes uniques :", filtered_cities)
 
-        for i, row in df.iterrows():
+        #self.table.clearContents()
+
+        #self.create_city_selection(selected_nights)
+
+        #print(self.update_city_choice(self.nights_spin.value()))
+
+    def update_city_choice(self, nights=None):
+        # nights = self.nights_spin.value()
+        if nights:
+            print(f"Filtering cities for nights = {nights}")
+            filtered_cities = self.dataFrame[self.dataFrame["Übernachtungen"] == nights]["Besuchte_Städte"].dropna().unique()
+            # cities = set(city.strip() for cities in filtered_cities for city in cities.split(","))
+            # return cities
+        else:
+            filtered_cities = self.dataFrame["Besuchte_Städte"].dropna().unique()
+            # cities = set(city.strip() for cities in cities for city in cities.split(","))
+            # return cities
+        cities = set(city.strip() for cities in filtered_cities for city in cities.split(","))
+        return cities
+
+
+
+    def update_table(self, dataFrame):
+        """Mettre à jour le tableau avec les résultats filtrés."""
+        self.table.clearContents()
+        self.table.setRowCount(0)
+        self.table.setRowCount(len(dataFrame))
+        self.table.setColumnCount(len(dataFrame.columns))
+        self.table.setHorizontalHeaderLabels(dataFrame.columns)
+
+        for i, row in dataFrame.iterrows():
             for j, value in enumerate(row):
                 self.table.setItem(i, j, QTableWidgetItem(str(value)))
 
     def show_error(self, message):
         """Afficher un message d'erreur."""
         QMessageBox.critical(self, "Erreur", message)
+
+    def display_unique_cities(self, filtered_df):
+
+        #   la function extrait et retourne une liste de villes unique a partir d'une dataframe filtree
+        unique_cities_list = []
+
+        # Parcourir les lignes du DataFrame
+        for _, row in filtered_df.iterrows():
+            cities = row['Besuchte_Städe'].split(",")  # Séparer les villes par la virgule
+            for city in cities:
+                if city.strip() not in unique_cities_list:  # Éviter les doublons et gérer les espaces
+                    unique_cities_list.append(city.strip())
+
+        # Mise à jour de l'affichage dans la QListWidget
+        #self.results_list.clear()  # Supposons que results_list est un QListWidget
+        if unique_cities_list:
+            for city in unique_cities_list:
+                self.results_list.addItem(QListWidgetItem(f"Ville unique : {city}"))
+        else:
+            self.results_list.addItem(QListWidgetItem("Aucune ville trouvée."))
+
+        # Retourner la liste des villes uniques
+        return unique_cities_list
 
 
 if __name__ == "__main__":
