@@ -52,6 +52,7 @@ class VoyageApp(QMainWindow):
         self.sea_combo = QComboBox()
         self.sea_combo.addItem("Toutes")
         self.sea_combo.addItems(self.df["Meerart"].unique())
+        self.sea_combo.currentTextChanged.connect(self.on_sea_combo_changed)
         sea_selection_layout.addWidget(QLabel("Mer:"))
         sea_selection_layout.addWidget(self.sea_combo)
         layout.addLayout(sea_selection_layout)
@@ -60,6 +61,7 @@ class VoyageApp(QMainWindow):
         nights_layout = QHBoxLayout()
         self.nights_spin = QSpinBox()
         self.nights_spin.setRange(1, 30)
+        self.nights_spin.valueChanged.connect(self.on_night_spin_changed)
         nights_layout.addWidget(QLabel("Nombre de nuits:"))
         nights_layout.addWidget(self.nights_spin)
         layout.addLayout(nights_layout)
@@ -190,6 +192,9 @@ class VoyageApp(QMainWindow):
         grid_layout = QGridLayout()
 
         row, col = 0, 0
+
+        #self.df_filtred_by_night = self.filter_by_night()
+
         unique_cities = self.df["Besuchte_Städte"].dropna().unique()
         cities = set(city.strip() for cities in unique_cities for city in cities.split(","))
 
@@ -198,7 +203,7 @@ class VoyageApp(QMainWindow):
             btn = QPushButton()
             btn.setCheckable(True)
             btn.setStyleSheet("border: none;")
-            btn.setIcon(QIcon(f"images/{city}.png"))  # Utilisation de QIcon
+            btn.setIcon(QIcon(f"../images/Hafenstaedte/{city}.jpg"))  # Utilisation de QIcon
             btn.setIconSize(QSize(100, 100))  # Taille de l'image
 
             # Ajouter un événement de clic pour la sélection
@@ -297,6 +302,62 @@ class VoyageApp(QMainWindow):
     def show_error(self, message):
         """Afficher un message d'erreur."""
         QMessageBox.critical(self, "Erreur", message)
+
+
+    def filter_by_sea(self, selected_sea, dataframe):
+        """
+        Filtre le DataFrame en fonction de la sélection du ComboBox.
+
+        :param selected_sea: str, sélection actuelle du ComboBox.
+                             Peut être "Toutes" ou une valeur spécifique.
+        :param dataframe: pd.DataFrame, tableau de données à filtrer.
+        :return: pd.DataFrame, tableau filtré.
+        """
+        if selected_sea == "Toutes":
+            # Ne filtre pas, retourne tout le tableau
+            return dataframe
+        else:
+            # Filtre le tableau en fonction de la colonne 'Meerart'
+            return dataframe[dataframe["Meerart"] == selected_sea]
+
+    def on_sea_combo_changed(self):
+        selected_sea = self.sea_combo.currentText()
+        filtered_df = self.filter_by_sea(selected_sea, self.df)
+        # Vous pouvez utiliser filtered_df pour mettre à jour l'affichage
+        print(filtered_df)  # Debug ou mettre à jour un tableau PyQt
+
+    def filter_by_night(self, selected_night, dataframe):
+        """
+        Filtre le DataFrame en fonction du nombre de nuits ±2 nuits.
+
+        :param selected_night: int, le nombre de nuits sélectionné par l'utilisateur.
+        :param dataframe: pd.DataFrame, le DataFrame contenant les données des voyages.
+        :return: pd.DataFrame, le DataFrame filtré.
+        """
+        # Définir la plage pour le filtrage
+        min_nuits = max(1, selected_night - 2)  # Minimum de 1 pour éviter les valeurs négatives
+        max_nuits = selected_night + 2
+
+        # Filtrer le DataFrame en fonction de la plage
+        dataframe_filtré = dataframe[
+            (dataframe["Übernachtungen"] >= min_nuits) &
+            (dataframe["Übernachtungen"] <= max_nuits)
+            ]
+
+        return dataframe_filtré
+
+    def on_night_spin_changed(self):
+        """
+        Met à jour le DataFrame filtré lorsque la valeur du QSpinBox change.
+        """
+        selected_night = self.nights_spin.value()
+        # Première étape : filtrer par la mer sélectionnée
+        selected_sea = self.sea_combo.currentText()
+        dataframe_filtré_par_mer = self.filter_by_sea(selected_sea, self.df)
+        # Deuxième étape : filtrer par le nombre de nuits
+        dataframe_final = self.filter_by_night(selected_night, dataframe_filtré_par_mer)
+        # Mettre à jour l'affichage ou afficher les données filtrées
+        print(dataframe_final)  # Debug ou mise à jour d'un tableau dans PyQt
 
 
 if __name__ == "__main__":
