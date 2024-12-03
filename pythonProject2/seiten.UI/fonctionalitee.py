@@ -47,29 +47,36 @@ class VoyageApp(QMainWindow):
     def init_ui(self):
         layout = QVBoxLayout()
 
-        # Section des types de mer
+        # Section du type de mer
         sea_selection_layout = QHBoxLayout()
         self.sea_combo = QComboBox()
         self.sea_combo.addItem("Toutes")
         self.sea_combo.addItems(self.df["Meerart"].unique())
-        self.sea_combo.currentTextChanged.connect(self.on_sea_combo_changed)
-        sea_selection_layout.addWidget(QLabel("Mer:"))
+        self.sea_combo.currentTextChanged.connect(self.on_filters_changed)
+        sea_selection_layout.addWidget(QLabel("Type de mer :"))
         sea_selection_layout.addWidget(self.sea_combo)
         layout.addLayout(sea_selection_layout)
 
-        # Section du nombre de nuits
+        # Section pour le nombre de nuits
         nights_layout = QHBoxLayout()
         self.nights_spin = QSpinBox()
-        self.nights_spin.setRange(1, 30)
-        self.nights_spin.valueChanged.connect(self.on_night_spin_changed)
-        nights_layout.addWidget(QLabel("Nombre de nuits:"))
+        self.nights_spin.setRange(0, 30)  # Inclure 0 comme état "non défini"
+        self.nights_spin.setSpecialValueText("Non défini")  # Afficher "Non défini" lorsque la valeur est 0
+        self.nights_spin.setValue(0)  # Définir la valeur initiale à "non défini"
+        self.nights_spin.valueChanged.connect(self.on_filters_changed)
+        nights_layout.addWidget(QLabel("Nombre de nuits :"))
         nights_layout.addWidget(self.nights_spin)
         layout.addLayout(nights_layout)
 
         # Section des villes
-        layout.addWidget(QLabel("Villes"))
-        city_selection_scroll = self.create_city_selection()
-        layout.addWidget(city_selection_scroll)
+        layout.addWidget(QLabel("Villes :"))
+        self.city_selection_widget = self.create_city_selection()
+        self.city_scroll_area = QScrollArea()
+        self.city_scroll_area.setWidget(self.city_selection_widget)
+        self.city_scroll_area.setWidgetResizable(True)
+        layout.addWidget(self.city_scroll_area)
+
+        self.setLayout(layout)
 
         # Section des types de navires
         ship_selection_layout = QHBoxLayout()
@@ -110,7 +117,7 @@ class VoyageApp(QMainWindow):
         reset_button = QPushButton("Réinitialiser")
         reset_button.clicked.connect(self.reset_form)
         search_button = QPushButton("Rechercher")
-        search_button.clicked.connect(self.filter_results)
+        #search_button.clicked.connect(self.filter_results)
         buttons_layout.addWidget(reset_button)
         buttons_layout.addWidget(search_button)
         layout.addLayout(buttons_layout)
@@ -186,16 +193,32 @@ class VoyageApp(QMainWindow):
         pixmap = QPixmap(image_path).scaled(300, 200, Qt.KeepAspectRatio)
         self.cabin_image_label.setPixmap(pixmap)
 
-    def create_city_selection(self):
-        """Créer une section de sélection des villes avec des boutons images."""
-        scroll_area = QScrollArea()
-        grid_layout = QGridLayout()
+    def get_filtered_results(self):
+        # Obtenir les valeurs des filtres
+        selected_night = self.nights_spin.value()
+        selected_sea = self.sea_combo.currentText()
 
+        # Filtrer par mer
+        df_filtered = self.filter_by_sea(selected_sea, self.df)
+
+        # Filtrer par nuit si défini
+        if selected_night != 0:
+            df_filtered = self.filter_by_night(selected_night, df_filtered)
+
+        return df_filtered
+
+    def create_city_selection(self):
+        """
+        Crée la section de sélection des villes avec des boutons image.
+        Les villes sont générées dynamiquement en fonction des résultats filtrés.
+        """
+        grid_layout = QGridLayout()
         row, col = 0, 0
 
-        #self.df_filtred_by_night = self.filter_by_night()
+        df_filtered = self.get_filtered_results()
 
-        unique_cities = self.df["Besuchte_Städte"].dropna().unique()
+        # Extraire les villes uniques
+        unique_cities = df_filtered["Besuchte_Städte"].dropna().unique()
         cities = set(city.strip() for cities in unique_cities for city in cities.split(","))
 
         for city in sorted(cities):
@@ -203,35 +226,46 @@ class VoyageApp(QMainWindow):
             btn = QPushButton()
             btn.setCheckable(True)
             btn.setStyleSheet("border: none;")
-            btn.setIcon(QIcon(f"../images/Hafenstaedte/{city}.jpg"))  # Utilisation de QIcon
+            btn.setIcon(QIcon(f"../images/Hafenstaedte/{city}.jpg"))  # Chemin des images
             btn.setIconSize(QSize(100, 100))  # Taille de l'image
 
-            # Ajouter un événement de clic pour la sélection
+            # Ajouter un événement de clic
             btn.clicked.connect(lambda _, c=city, b=btn: self.toggle_city_selection(c, b))
 
-            # Ajouter un label sous l'image pour le nom de la ville
+            # Ajouter un label sous le bouton
             city_layout = QVBoxLayout()
             city_layout.addWidget(btn)
             city_label = QLabel(city)
             city_label.setAlignment(Qt.AlignCenter)
             city_layout.addWidget(city_label)
 
-            # Créer un conteneur pour le bouton et le label
+            # Conteneur pour chaque ville
             city_widget = QWidget()
             city_widget.setLayout(city_layout)
 
-            # Ajouter le conteneur au layout
+            # Ajouter à la grille
             grid_layout.addWidget(city_widget, row, col)
             col += 1
-            if col > 3:
+            if col > 3:  # 4 colonnes max
                 col = 0
                 row += 1
 
+        # Retourner le conteneur
         scroll_widget = QWidget()
         scroll_widget.setLayout(grid_layout)
-        scroll_area.setWidget(scroll_widget)
-        scroll_area.setWidgetResizable(True)
-        return scroll_area
+        return scroll_widget
+
+    def on_filters_changed(self):
+        """
+        Méthode appelée lorsque les filtres (mer ou nuits) changent.
+        Actualise l'affichage des villes.
+        """
+        # Supprimer le widget précédent
+        self.city_scroll_area.takeWidget()
+
+        # Créer un nouveau widget avec les villes filtrées
+        self.city_selection_widget = self.create_city_selection()
+        self.city_scroll_area.setWidget(self.city_selection_widget)
 
     def toggle_city_selection(self, city_name, btn):
         """Ajouter ou retirer une ville de la sélection et mettre à jour l'apparence."""
@@ -268,26 +302,6 @@ class VoyageApp(QMainWindow):
         # Effacer le tableau des résultats
         self.table.clearContents()
         self.table.setRowCount(0)
-
-    def filter_results(self):
-        """Filtrer les résultats en fonction des critères sélectionnés."""
-        sea = self.sea_combo.currentText()
-        nights = self.nights_spin.value()
-        cities = self.selected_cities
-
-        filtered_df = self.df.copy()
-
-        if sea != "Toutes":
-            filtered_df = filtered_df[filtered_df["Meerart"] == sea]
-
-        filtered_df = filtered_df[(filtered_df["Übernachtungen"] >= (nights - 2)) &
-                                  (filtered_df["Übernachtungen"] <= (nights + 2))]
-
-        if cities:
-            filtered_df = filtered_df[filtered_df["Besuchte_Städte"].apply(
-                lambda x: all(city in (x or "") for city in cities))]
-
-        self.update_table(filtered_df)
 
     def update_table(self, df):
         """Mettre à jour le tableau avec les résultats filtrés."""
@@ -358,6 +372,8 @@ class VoyageApp(QMainWindow):
         dataframe_final = self.filter_by_night(selected_night, dataframe_filtré_par_mer)
         # Mettre à jour l'affichage ou afficher les données filtrées
         print(dataframe_final)  # Debug ou mise à jour d'un tableau dans PyQt
+        self.city_selection_widget = self.create_city_selection()
+        #self.layout().addWidget(self.city_selection_widget)  # Actualiser dans le layout
 
 
 if __name__ == "__main__":
