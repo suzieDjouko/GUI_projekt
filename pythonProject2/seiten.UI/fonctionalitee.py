@@ -85,6 +85,7 @@ class VoyageApp(QMainWindow):
         self.load_ship_types()
         self.ship_combo.currentTextChanged.connect(self.display_selected_ship_image)
 
+
         self.ship_image_label = QLabel()
         self.ship_image_label.setAlignment(Qt.AlignCenter)
         self.ship_image_label.setFixedSize(300, 200)
@@ -117,7 +118,6 @@ class VoyageApp(QMainWindow):
         reset_button = QPushButton("Réinitialiser")
         reset_button.clicked.connect(self.reset_form)
         search_button = QPushButton("Rechercher")
-        #search_button.clicked.connect(self.filter_results)
         buttons_layout.addWidget(reset_button)
         buttons_layout.addWidget(search_button)
         layout.addLayout(buttons_layout)
@@ -141,25 +141,33 @@ class VoyageApp(QMainWindow):
 
         for filename in os.listdir(self.schiffstyp_folder):
             if filename.lower().endswith((".png", ".jpg", ".jpeg")):
-                ship_name = filename.split(".")[0]  # Nom sans extension
+                ship_name = filename.split(" ")[-1].split(".")[0]  # Exemple: "A" de "Schiffstyp A.jpg"
+
+                #ship_name = filename.split(".")[0]  # Nom sans extension
                 self.ship_combo.addItem(ship_name)
 
     def display_selected_ship_image(self, ship_name):
-        """Afficher l'image du navire sélectionné."""
-        if ship_name == "Sélectionnez un type de navire" or ship_name == "Aucun navire disponible":
-            QMessageBox.warning(self, "Attention", "Aucun type de navire sélectionné.")
+        """
+        Afficher l'image du navire sélectionné, uniquement si le navire
+        est disponible dans les résultats filtrés.
+        """
+        # Obtenir les résultats filtrés
+        filtered_results = self.get_filtered_results()
+        available_ships = filtered_results['Schiffstyp'].unique()
+
+        # Vérifier si le navire sélectionné est dans les résultats filtrés
+        if ship_name not in available_ships:
             return
 
-        image_path = os.path.join(self.schiffstyp_folder, f"{ship_name}.jpg")
+        # Charger l'image correspondante
+        image_path = os.path.join(self.schiffstyp_folder, f"Schiffstyp {ship_name}.jpg")
         if not os.path.exists(image_path):  # Si .jpg n'existe pas, chercher d'autres extensions
             for ext in [".png", ".jpeg"]:
                 image_path = os.path.join(self.schiffstyp_folder, f"{ship_name}{ext}")
                 if os.path.exists(image_path):
                     break
-            else:
-                QMessageBox.warning(self, "Erreur", f"Aucune image trouvée pour le navire : {ship_name}.")
-                return
 
+        # Afficher l'image
         pixmap = QPixmap(image_path).scaled(300, 200, Qt.KeepAspectRatio)
         self.ship_image_label.setPixmap(pixmap)
 
@@ -226,8 +234,9 @@ class VoyageApp(QMainWindow):
             btn = QPushButton()
             btn.setCheckable(True)
             btn.setStyleSheet("border: none;")
+
             btn.setIcon(QIcon(f"../images/Hafenstaedte/{city}.jpg"))  # Chemin des images
-            btn.setIconSize(QSize(100, 100))  # Taille de l'image
+            btn.setIconSize(QSize(120, 120))  # Taille de l'image
 
             # Ajouter un événement de clic
             btn.clicked.connect(lambda _, c=city, b=btn: self.toggle_city_selection(c, b))
@@ -257,15 +266,26 @@ class VoyageApp(QMainWindow):
 
     def on_filters_changed(self):
         """
-        Méthode appelée lorsque les filtres (mer ou nuits) changent.
-        Actualise l'affichage des villes.
+        Méthode appelée lorsque les filtres (mer, nuits, villes) changent.
+        Actualise l'affichage des villes et des types de bateaux.
         """
-        # Supprimer le widget précédent
-        self.city_scroll_area.takeWidget()
+        try:
+            print("Filtres modifiés, mise à jour des villes et des bateaux...")
 
-        # Créer un nouveau widget avec les villes filtrées
-        self.city_selection_widget = self.create_city_selection()
-        self.city_scroll_area.setWidget(self.city_selection_widget)
+            # Actualiser les villes
+            self.city_scroll_area.takeWidget()
+            self.city_selection_widget = self.create_city_selection()
+            self.city_scroll_area.setWidget(self.city_selection_widget)
+
+            print("Villes mises à jour")
+
+            # Actualiser les types de navires
+            self.update_ship_types()
+
+            print("Types de navires mis à jour")
+
+        except Exception as e:
+            print(f"Erreur lors de la mise à jour des filtres : {e}")
 
     def toggle_city_selection(self, city_name, btn):
         """Ajouter ou retirer une ville de la sélection et mettre à jour l'apparence."""
@@ -353,12 +373,12 @@ class VoyageApp(QMainWindow):
         max_nuits = selected_night + 2
 
         # Filtrer le DataFrame en fonction de la plage
-        dataframe_filtré = dataframe[
+        dataframe_filtre = dataframe[
             (dataframe["Übernachtungen"] >= min_nuits) &
             (dataframe["Übernachtungen"] <= max_nuits)
             ]
 
-        return dataframe_filtré
+        return dataframe_filtre
 
     def on_night_spin_changed(self):
         """
@@ -367,13 +387,41 @@ class VoyageApp(QMainWindow):
         selected_night = self.nights_spin.value()
         # Première étape : filtrer par la mer sélectionnée
         selected_sea = self.sea_combo.currentText()
-        dataframe_filtré_par_mer = self.filter_by_sea(selected_sea, self.df)
+        dataframe_filtre_par_mer = self.filter_by_sea(selected_sea, self.df)
         # Deuxième étape : filtrer par le nombre de nuits
-        dataframe_final = self.filter_by_night(selected_night, dataframe_filtré_par_mer)
+        dataframe_final = self.filter_by_night(selected_night, dataframe_filtre_par_mer)
         # Mettre à jour l'affichage ou afficher les données filtrées
         print(dataframe_final)  # Debug ou mise à jour d'un tableau dans PyQt
         self.city_selection_widget = self.create_city_selection()
         #self.layout().addWidget(self.city_selection_widget)  # Actualiser dans le layout
+        #return dataframe_final
+
+    def update_ship_types(self):
+        """Met à jour les types de bateaux dans le combo en fonction des filtres."""
+        try:
+            print("Mise à jour des types de navires...")
+
+            # Récupérer les résultats filtrés
+            filtered_df = self.get_filtered_results()
+            print(f"Data filtrée : {filtered_df}")
+
+            # Obtenir les types de navires uniques dans les résultats filtrés
+            available_ships = set(filtered_df["Schiffstyp"].dropna().unique())
+            print(f"Navires disponibles : {available_ships}")
+
+            # Vider le combo et réinitialiser
+            self.ship_combo.clear()
+            self.ship_combo.addItem("Sélectionnez un type de navire")
+
+            # Ajouter les navires filtrés (ou tous si aucun filtre n'est appliqué)
+            if available_ships:
+                self.ship_combo.addItems(sorted(available_ships))
+            else:
+                self.ship_combo.addItem("Aucun navire disponible")
+            print("Types de navires ajoutés au combo.")
+
+        except Exception as e:
+            print(f"Erreur dans la mise à jour des types de navires : {e}")
 
 
 if __name__ == "__main__":
