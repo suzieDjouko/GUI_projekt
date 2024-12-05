@@ -36,8 +36,10 @@ class VoyageApp(QMainWindow):
         """Charger les données depuis l'Excel et les nettoyer."""
         try:
             self.df = pd.read_excel(self.data_file)
-            self.df["Meerart"] = self.df["Meerart"].fillna("Inconnu").astype(str)
-            self.df["Besuchte_Städte"] = self.df["Besuchte_Städte"].fillna("Inconnu").astype(str)
+            self.df = self.df[self.df["Meerart"].notna()]
+            self.df["Meerart"] = self.df["Meerart"].astype(str)
+            self.df = self.df[self.df["Besuchte_Städte"].notna()]
+            self.df["Besuchte_Städte"] = self.df["Besuchte_Städte"].astype(str)
             self.df["Übernachtungen"] = self.df["Übernachtungen"].fillna(0).astype(int)
         except FileNotFoundError:
             self.show_error(f"Fichier introuvable : {self.data_file}")
@@ -205,13 +207,19 @@ class VoyageApp(QMainWindow):
         # Obtenir les valeurs des filtres
         selected_night = self.nights_spin.value()
         selected_sea = self.sea_combo.currentText()
+        df_filtered = self.df
 
         # Filtrer par mer
-        df_filtered = self.filter_by_sea(selected_sea, self.df)
+        if selected_sea != "Toutes":
+            df_filtered = self.filter_by_sea(selected_sea, df_filtered)
 
         # Filtrer par nuit si défini
         if selected_night != 0:
             df_filtered = self.filter_by_night(selected_night, df_filtered)
+        #si au moins une ville dans la colone 'Besuchte Stadte
+        if self.selected_cities:
+            df_filtered = df_filtered[df_filtered["Besuchte_Städte"].apply(
+                lambda cities: any(city in self.selected_cities for city in cities.split(",")))]
 
         return df_filtered
 
@@ -271,6 +279,7 @@ class VoyageApp(QMainWindow):
         """
         try:
             print("Filtres modifiés, mise à jour des villes et des bateaux...")
+           # self.update_city_buttons()
 
             # Actualiser les villes
             self.city_scroll_area.takeWidget()
@@ -291,10 +300,17 @@ class VoyageApp(QMainWindow):
         """Ajouter ou retirer une ville de la sélection et mettre à jour l'apparence."""
         if btn.isChecked():
             self.selected_cities.add(city_name)
+            self.update_ship_types()
             btn.setStyleSheet("border: 2px solid blue; background-color: lightblue;")
         else:
             self.selected_cities.remove(city_name)
+            self.update_ship_types()
             btn.setStyleSheet("border: 1px solid black; background-color: none;")
+
+        print(self.selected_cities)
+
+        return self.selected_cities
+
 
     def reset_form(self):
         """Réinitialiser tous les choix du formulaire."""
@@ -349,6 +365,7 @@ class VoyageApp(QMainWindow):
         """
         if selected_sea == "Toutes":
             # Ne filtre pas, retourne tout le tableau
+
             return dataframe
         else:
             # Filtre le tableau en fonction de la colonne 'Meerart'
@@ -399,9 +416,24 @@ class VoyageApp(QMainWindow):
     def update_ship_types(self):
         """Met à jour les types de bateaux dans le combo en fonction des filtres."""
         try:
-            print("Mise à jour des types de navires...")
+            self.ship_combo.clear()
+            self.ship_combo.addItem("Sélectionnez un type de navire")
 
-            # Récupérer les résultats filtrés
+            df_filtered = self.get_filtered_results()
+            available_ships = df_filtered['Schiffstyp'].unique()
+
+            # Vider la combo des types de navires et y ajouter uniquement ceux disponibles
+
+            for ship in available_ships:
+                self.ship_combo.addItem(ship)
+            """
+            selected_cities = self.selected_cities
+            if not selected_cities:
+                self.load_ship_types()  # Si aucune ville n'est sélectionnée, charger tous les navires
+                return
+
+            print("Mise à jour des types de navires...")
+             # Récupérer les résultats filtrés
             filtered_df = self.get_filtered_results()
             print(f"Data filtrée : {filtered_df}")
 
@@ -419,9 +451,11 @@ class VoyageApp(QMainWindow):
             else:
                 self.ship_combo.addItem("Aucun navire disponible")
             print("Types de navires ajoutés au combo.")
+            """
 
         except Exception as e:
             print(f"Erreur dans la mise à jour des types de navires : {e}")
+
 
 
 if __name__ == "__main__":
