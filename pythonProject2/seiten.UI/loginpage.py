@@ -5,7 +5,7 @@ from PyQt5.QtGui import QPixmap
 
 from fonctionalitee import VoyageApp
 from utiles import show_success_message ,show_warning_message , is_valid_email
-from database_action import DatabaseAction
+from database_action import *
 import re
 import sqlite3
 import random
@@ -17,7 +17,7 @@ conn = sqlite3.connect('User.sqlite')
 cursor = conn.cursor()
 
 cursor.execute('''
-    CREATE TABLE IF NOT EXISTS Userr(
+    CREATE TABLE IF NOT EXISTS User(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
@@ -32,7 +32,7 @@ class LoginRegisterPage(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Login")
-        self.resize(1920, 1400)
+        self.resize(1700, 1200)
 
         screen = QApplication.primaryScreen().geometry()
         x = (screen.width() - self.width()) // 2
@@ -193,9 +193,9 @@ class LoginRegisterPage(QMainWindow):
         username = self.username_input.text()
         password = self.password_input.text()
 
-        #cursor.execute("SELECT * FROM Userr WHERE username=? AND password=?", (username, password))
+        #cursor.execute("SELECT * FROM User WHERE username=? AND password=?", (username, password))
         #user = cursor.fetchone()
-        cursor.execute("SELECT id, kontostand FROM Userr WHERE username=? AND password=?", (username, password))
+        cursor.execute("SELECT id, kontostand FROM User WHERE username=? AND password=?", (username, password))
         user = cursor.fetchone()
 
         if user:
@@ -208,7 +208,7 @@ class LoginRegisterPage(QMainWindow):
             if new_kontostand >20000:
                 new_kontostand =20000
 
-            cursor.execute("UPDATE Userr SET kontostand=? WHERE id=?", (new_kontostand, user_id))
+            cursor.execute("UPDATE User SET kontostand=? WHERE id=?", (new_kontostand, user_id))
             conn.commit()
 
             self.username_input.clear()
@@ -245,7 +245,7 @@ class LoginRegisterPage(QMainWindow):
             return
 
         try:
-            cursor.execute("INSERT INTO Userr (username,email,password,kontostand) VALUES (?,?,?,?)",
+            cursor.execute("INSERT INTO User (username,email,password,kontostand) VALUES (?,?,?,?)",
                            (username,email,password,0))
             conn.commit()
 

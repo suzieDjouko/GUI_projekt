@@ -1,0 +1,61 @@
+            # Section des types de cabines
+        cabin_selection_layout = QHBoxLayout()
+        self.cabin_combo = QComboBox()
+        self.cabin_combo.addItem("Sélectionnez un type de cabine")
+        self.load_cabin_types()
+        self.cabin_combo.currentTextChanged.connect(self.display_selected_cabin_image)
+
+        self.cabin_image_label = QLabel()
+        self.cabin_image_label.setAlignment(Qt.AlignCenter)
+        self.cabin_image_label.setFixedSize(300, 200)
+        self.cabin_image_label.setStyleSheet("border: 1px solid black;")
+
+        cabin_selection_layout.addWidget(QLabel("Type de cabine"))
+        cabin_selection_layout.addWidget(self.cabin_combo)
+        cabin_selection_layout.addWidget(self.cabin_image_label)
+        layout.addLayout(cabin_selection_layout)
+
+
+
+
+    def load_cabin_types(self):
+        """Charger les types de cabines dans la barre déroulante."""
+        if not os.path.exists(self.cabintype_folder):
+            self.cabin_combo.addItem("Aucune cabine disponible")
+            return
+
+        for filename in os.listdir(self.cabintype_folder):
+            if filename.lower().endswith((".png", ".jpg", ".jpeg")):
+                cabin_name = filename.split(".")[0]  # Nom sans extension
+                self.cabin_combo.addItem(cabin_name)
+
+    def display_selected_cabin_image(self, cabin_name):
+        """Afficher l'image de la cabine sélectionnée."""
+        if cabin_name == "Sélectionnez un type de cabine" or cabin_name == "Aucune cabine disponible":
+            QMessageBox.warning(self, "Attention", "Aucun type de cabine sélectionné.")
+            return
+
+        image_path = os.path.join(self.cabintype_folder, f"{cabin_name}.jpg")
+        if not os.path.exists(image_path):  # Si .jpg n'existe pas, chercher d'autres extensions
+            for ext in [".png", ".jpeg"]:
+                image_path = os.path.join(self.cabintype_folder, f"{cabin_name}{ext}")
+                if os.path.exists(image_path):
+                    break
+            else:
+                QMessageBox.warning(self, "Erreur", f"Aucune image trouvée pour la cabine : {cabin_name}.")
+                return
+
+        pixmap = QPixmap(image_path).scaled(300, 200, Qt.KeepAspectRatio)
+        self.cabin_image_label.setPixmap(pixmap)
+
+
+
+         def update_table(self, df):
+        """Mettre à jour le tableau avec les résultats filtrés."""
+        self.table.setRowCount(len(df))
+        self.table.setColumnCount(len(df.columns))
+        self.table.setHorizontalHeaderLabels(df.columns)
+
+        for i, row in df.iterrows():
+            for j, value in enumerate(row):
+                self.table.setItem(i, j, QTableWidgetItem(str(value)))
