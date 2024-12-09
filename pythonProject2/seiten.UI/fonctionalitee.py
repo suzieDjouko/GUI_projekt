@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 import pandas as pd
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (
@@ -30,7 +31,7 @@ class VoyageApp(QMainWindow):
         self.cabintype_folder = "../images/Kabinentypen"  # Types de cabines
 
         # Sélections de l'utilisateur
-        self.selected_schiffstyp = None
+        self.shiffstyp_default = "Choose a Ship"
         self.selected_cities = set()
 
         # Initialiser l'interface
@@ -45,6 +46,19 @@ class VoyageApp(QMainWindow):
             self.df = self.df[self.df["Besuchte_Städte"].notna()]
             self.df["Besuchte_Städte"] = self.df["Besuchte_Städte"].astype(str)
             self.df["Übernachtungen"] = self.df["Übernachtungen"].fillna(0).astype(int)
+            self.df = self.df[self.df["Innenkabine"].notna()]
+            self.df["Innenkabine"] = self.df["Innenkabine"].astype(str)
+            self.df = self.df[self.df["Aussenkabine"].notna()]
+            self.df["Aussenkabine"] = self.df["Aussenkabine"].astype(str)
+            self.df = self.df[self.df["Balkonkabine"].notna()]
+            self.df["Balkonkabine"] = self.df["Balkonkabine"].astype(str)
+            self.df = self.df[self.df["Luxuskabine1"].notna()]
+            self.df["Luxuskabine1"] = self.df["Luxuskabine1"].astype(str)
+            self.df = self.df[self.df["Luxuskabine2"].notna()]
+            self.df["Luxuskabine2"] = self.df["Luxuskabine2"].astype(str)
+            self.df = self.df[self.df["Luxuskabine3"].notna()]
+            self.df["Luxuskabine3"] = self.df["Luxuskabine3"].astype(str)
+
         except FileNotFoundError:
             self.show_error(f"Fichier introuvable : {self.data_file}")
         except Exception as e:
@@ -274,9 +288,9 @@ class VoyageApp(QMainWindow):
         # Section des types de navires
         ship_selection_layout = QHBoxLayout()
         self.ship_combo = QComboBox()
-        self.ship_combo.setStyleSheet(style_box)
-        self.ship_combo.addItem("Choose a Ship")
+        self.ship_combo.addItem(self.shiffstyp_default)
         self.load_ship_types()
+        self.ship_combo.setStyleSheet(style_box)
         self.ship_combo.currentTextChanged.connect(self.display_selected_ship_image)
 
 
@@ -301,6 +315,7 @@ class VoyageApp(QMainWindow):
         reset_button.setStyleSheet(reset_button_style)
 
         search_button = QPushButton("Search")
+        search_button.clicked.connect(self.on_search_button_clicked)
         search_button.setStyleSheet(search_button_style)
 
         buttons_layout.addWidget(reset_button)
@@ -310,8 +325,19 @@ class VoyageApp(QMainWindow):
 
 
         ##PAGE RESULT
-
+        #self.dataframefiltred = self.get_filtered_results()
         self.result_layout = QVBoxLayout()
+        self.result_label = QLabel("List of Trips")
+        self.result_layout.addWidget(self.result_label)
+        self.result_table = QTableWidget()
+        self.result_table.setColumnCount(len(self.df.columns) + 1)
+        self.result_table.setHorizontalHeaderLabels(self.df.columns)
+        self.result_layout.addWidget(self.result_table)
+        self.result_page.setLayout(self.result_layout)
+
+        #PAGE CABINES
+
+        self.cabin_layout = QHBoxLayout()
 
 
 
@@ -360,55 +386,167 @@ class VoyageApp(QMainWindow):
         container.setLayout(main_layout)
         self.setCentralWidget(container)
 
-    def create_result_table(self):
-        # Créer un tableau pour afficher les résultats des voyages
-        self.result_table = QTableWidget()
-        self.result_table.setColumnCount(8)  # Par exemple, 1 pour le numéro de voyage, 1 pour la mer, etc.
-        self.result_table.setHorizontalHeaderLabels(
-            ["Reisenummer", "Meerart", "Übernachtungen", "Innenkabine", "Aussenkabine", "Balkonkabine",
-             "Luxuskabine Kategorie1", "Luxuskabine Kategorie2", "Luxuskabine Kategorie3"])
 
-        # Ajouter les voyages filtrés dans le tableau
-        filtered_results = self.get_filtered_results()
+    def get_filtered_results(self):
+        # Obtenir les valeurs des filtres
+        selected_night = self.nights_spin.value()
+        selected_sea = self.sea_combo.currentText()
+        #selected_ship = self.ship_combo.currentText()
+        df_filtered = self.df.copy()
 
-        # Parcours des voyages filtrés
-        for index, row in filtered_results.iterrows():
-            reisenummer = row["Reisenummer"]
-            meerart = row["Meerart"]
-            uebernachtungen = row["Übernachtungen"]
-            cabin_prices = row[
-                ["Innenkabine", "Aussenkabine", "Balkonkabine", "Luxuskabine Kategorie1", "Luxuskabine Kategorie2",
-                 "Luxuskabine Kategorie3"]]
+        # Filtrer par mer
+        if selected_sea != "All"and "Meerart" in df_filtered.columns:
+            df_filtered = self.filter_by_sea(selected_sea, df_filtered)
 
-            # Ajouter une ligne dans le tableau
-            row_position = self.result_table.rowCount()
-            self.result_table.insertRow(row_position)
 
-            # Ajouter les données du voyage dans chaque cellule de la ligne
-            self.result_table.setItem(row_position, 0, QTableWidgetItem(str(reisenummer)))
-            self.result_table.setItem(row_position, 1, QTableWidgetItem(meerart))
-            self.result_table.setItem(row_position, 2, QTableWidgetItem(str(uebernachtungen)))
+        # Filtrer par nuit si défini
+        if selected_night != 0 and "Übernachtungen" in df_filtered.columns:
+            df_filtered = self.filter_by_night(selected_night, df_filtered)
+        #si au moins une ville dans la colone 'Besuchte Stadte
+        if self.selected_cities and "Besuchte_Städte" in df_filtered.columns:
+            def match_cities(cities):
+                if not isinstance(cities, str):  # Sécurité contre les valeurs non textuelles
+                    return False
+                return any(city.strip() in self.selected_cities for city in cities.split(","))
 
-            # Ajouter les prix de chaque cabine et désactiver celles qui sont inaccessibles
-            for i, price in enumerate(cabin_prices):
-                kontostand = get_user_balance(self.header_user_name_edit)  # Fonction qui retourne le solde de l'utilisateur
-                cell = QTableWidgetItem(str(price))
-                if price > kontostand:
-                    cell.setFlags(cell.flags() & ~Qt.ItemIsEditable)  # Désactiver la cellule
-                    cell.setBackground(
-                        QColor(200, 200, 200))  # Couleur pour signaler que la cabine n'est pas sélectionnable
-                self.result_table.setItem(row_position, i + 3, cell)
+            df_filtered = df_filtered[df_filtered["Besuchte_Städte"].apply(match_cities)]
 
-        # Ajouter le tableau à votre layout
+        #if selected_ship and "Schiffstyp" in df_filtered.columns:
+           # df_filtered = df_filtered[df_filtered["Schiffstyp"] == selected_ship]
+        print(f"Filtrage par mer : {selected_sea}")
+        print(f"Filtrage par nuit : {selected_night}")
+        print(f"Villes sélectionnées : {self.selected_cities}")
 
-        self.result_layout.addWidget(self.result_table)
-        self.result_page.setLayout(self.result_layout)
+        return df_filtered
 
-    def update_result_page(self):
-        # Effacer l'ancienne table
+    def display_result_table(self, filtred_data):
+
+        self.reset_table()
+        user_balance = float(get_user_balance(self.header_user_name_edit.text()))
+        #user_balance2 = float(self.kontostand_amont_edit.text()
+        #newdataframe = self.get_filtered_results()
+
+
+        if filtred_data.empty:
+            self.result_label.setText("Aucun résultat trouvé.")
+            return
+
+        self.result_table.setRowCount(len(filtred_data))
+        self.result_table.setColumnCount(len(filtred_data)+1 )
+        self.result_table.setHorizontalHeaderLabels(list(filtred_data.columns)+["choose"])
+
+        for i, row_data in filtred_data.iterrows():
+            abordable = False  # Vérifie si au moins une cabine est abordable
+
+            for j, value in enumerate(row_data):
+                self.result_table.setItem(i, j, QTableWidgetItem(str(value)))
+
+            for cabin_typ in ["Innenkabine", "Aussenkabine", "Balkonkabine", "Luxuskabine1", "Luxuskabine2", "Luxuskabine3"]:
+                cabin_prix_value = row_data.get(cabin_typ , "nicht vorhanden")
+
+                if cabin_prix_value == "nicht vorhanden":
+                    cabin_item = QTableWidgetItem("Nicht vorhanden")
+                    cabin_item.setFlags(Qt.ItemIsEnabled)  # Désactiver la cellule
+                    cabin_item.setBackground(QColor("lightgray"))
+                else:
+                    try:
+                        cabin_prix_value = float(cabin_prix_value)
+                        if cabin_prix_value <= user_balance:
+                            abordable = True
+                            cabin_item = QTableWidgetItem(f"{cabin_prix_value} €")
+                            cabin_item.setForeground(QColor("green"))
+                        else:
+                            cabin_item = QTableWidgetItem(f"{cabin_prix_value} €")
+                            cabin_item.setForeground(QColor("red"))
+                    except ValueError:
+                        cabin_item = QTableWidgetItem("Nicht vorhanden")
+                        cabin_item.setFlags(Qt.ItemIsEnabled)  # Désactiver la cellule
+                        cabin_item.setBackground(QColor("lightgray"))
+
+                    # Mettre la cellule dans la bonne colonne
+                self.result_table.setItem(i, filtred_data.columns.get_loc(cabin_typ), cabin_item)
+
+                button = QPushButton("choose")
+                button.setEnabled(abordable)
+                button.clicked.connect(lambda _, r=row_data: self.on_choose_button_clicked(r))
+                self.result_table.setCellWidget(i, len(filtred_data.columns), button)
+
+                if not abordable:
+                    for j in range(len(filtred_data.columns)):
+                        if self.result_table.item(i, j):
+                            self.result_table.item(i, j).setFlags(Qt.ItemIsEnabled)
+                    button.setToolTip("Solde insuffisant pour cette cabine.")
+
+            self.result_table.resizeColumnsToContents()
+
+    def reset_table(self):
         self.result_table.setRowCount(0)
+        self.result_table.setColumnCount(0)
+        #self.result_table.setHorizontalHeaderLabels([])
+
+    def on_search_button_clicked(self):
+        new_dataFrame_filtred= self.get_filtered_results()
+        self.display_result_table(new_dataFrame_filtred)
+        self.stacked_widget.setCurrentWidget(self.result_page)
+
+    def on_choose_button_clicked(self, row_data):
+        QMessageBox.information(self, "Voyage sélectionné",
+                                f"Vous avez choisi le voyage n°{row_data['Reisenummer']}.")
+
+        # Mettre à jour la table pour ne garder que le voyage sélectionné
+        self.result_table.setRowCount(1)
+        for col_idx, value in enumerate(row_data):
+            self.result_table.setItem(0, col_idx, QTableWidgetItem(str(value)))
+
+        # Afficher les images de cabine en fonction de la sélection
+        self.display_cabin_images(row_data)
+
+    def display_cabin_images(self, row_data):
+        """
+        Affiche les images des cabines disponibles pour le voyage sélectionné.
+        """
+        cabine_types = ["InnenKabine", "Aussenkabine", "BalkonKabine",
+                        "Luxuskabine1", "Luxuskabine2", "Luxuskabine3"]
+
+        user_balance = get_user_balance(self.header_user_name_edit.text())  # Solde utilisateur récupéré dynamiquement
+
+        for cabine_type in cabine_types:
+            cabine_value = row_data.get(cabine_type, "Pas disponible")
+            if cabine_value != "Pas disponible":
+                prix = cabine_value
+                image_path = self.get_cabin_image_path(cabine_type)  # Chemin de l'image de la cabine
+                cabine_button = QPushButton(f"{cabine_type} ({prix} €)")
+                cabine_button.setEnabled(prix <= user_balance)  # Activer si abordable
+                cabine_button.clicked.connect(lambda _, t=cabine_type: self.on_cabin_selected(t))
+
+                # Ajouter le bouton et l'image au layout (à définir dans votre interface)
+                self.cabin_layout.addWidget(cabine_button)
+                image_label = QLabel()
+                image_label.setPixmap(QPixmap(image_path).scaled(100, 100, Qt.KeepAspectRatio))
+                self.cabin_layout.addWidget(image_label)
+
+    # def update_result_page(self):
+        # Effacer l'ancienne table
+       # self.result_table.setRowCount(0)
         # Ajouter de nouvelles lignes pour les résultats filtrés
-        self.create_result_table()
+        #self.create_result_table()
+    def get_cabin_image_path(self, cabine_type):
+        images_path = {
+            "InnenKabine": "../images/Kabinentypen/Innenkabine.JPG",
+            "AussenKabine": "../images/Kabinentypen/Aussenkabine.JPG",
+            "BalkonKabine": "../images/Kabinentypen/Balkonkabine.JPG",
+            "Luxuskabine1": "../images/Kabinentypen/Luxuskabine Kategorie 1.jpg",
+            "Luxuskabine2": "../images/Kabinentypen/Luxuskabine Kategorie 2.jpg",
+            "Luxuskabine3": "../images/Kabinentypen/Luxuskabine Kategorie 3.jpg"
+        }
+        return images_path.get(cabine_type, "")
+
+    def on_cabin_selected(self, cabine_type):
+        """
+        Gère la sélection d'une cabine par l'utilisateur.
+        """
+        QMessageBox.information(self, "Cabine sélectionnée",
+                                f"Vous avez sélectionné une {cabine_type}.")
 
     def load_ship_types(self):
         """Charger les types de navires dans la barre déroulante."""
@@ -452,29 +590,6 @@ class VoyageApp(QMainWindow):
         self.ship_image_label.setPixmap(pixmap)
 
 
-    def get_filtered_results(self):
-        # Obtenir les valeurs des filtres
-        selected_night = self.nights_spin.value()
-        selected_sea = self.sea_combo.currentText()
-        df_filtered = self.df.copy()
-
-        # Filtrer par mer
-        if selected_sea != "All"and "Meerart" in df_filtered.columns:
-            df_filtered = self.filter_by_sea(selected_sea, df_filtered)
-
-        # Filtrer par nuit si défini
-        if selected_night != 0 and "Übernachtungen" in df_filtered.columns:
-            df_filtered = self.filter_by_night(selected_night, df_filtered)
-        #si au moins une ville dans la colone 'Besuchte Stadte
-        if self.selected_cities and "Besuchte_Städte" in df_filtered.columns:
-            def match_cities(cities):
-                if not isinstance(cities, str):  # Sécurité contre les valeurs non textuelles
-                    return False
-                return any(city.strip() in self.selected_cities for city in cities.split(","))
-
-            df_filtered = df_filtered[df_filtered["Besuchte_Städte"].apply(match_cities)]
-
-        return df_filtered
 
     def create_city_selection(self):
         """
@@ -485,7 +600,7 @@ class VoyageApp(QMainWindow):
         row, col = 0, 0
 
         df_filtered = self.get_filtered_results()
-
+        print(df_filtered)
 
         # Extraire les villes uniques
         unique_cities = df_filtered["Besuchte_Städte"].dropna().unique()
@@ -606,13 +721,14 @@ class VoyageApp(QMainWindow):
 
     def filter_by_sea(self, selected_sea, dataframe):
 
-        #if selected_sea == "All":
-            # Ne filtre pas, retourne tout le tableau
-
-           # return dataframe
-       # else:
-            # Filtre le tableau en fonction de la colonne 'Meerart'
         return dataframe[dataframe["Meerart"] == selected_sea]
+
+    def filter_by_ship(self, selected_ship, dataframe):
+
+        return dataframe[dataframe["Schifftyp"] == selected_ship]
+
+
+
 
     def on_sea_combo_changed(self):
         selected_sea = self.sea_combo.currentText()
@@ -637,7 +753,7 @@ class VoyageApp(QMainWindow):
             (dataframe["Übernachtungen"] >= min_nuits) &
             (dataframe["Übernachtungen"] <= max_nuits)
             ]
-
+        print(dataframe_filtre)
         return dataframe_filtre
 
     def on_night_spin_changed(self):
@@ -653,10 +769,11 @@ class VoyageApp(QMainWindow):
 
     def update_ship_types(self):
         """Met à jour les types de bateaux dans le combo en fonction des filtres."""
-        if not self.selected_cities and self.sea_combo.currentText() == "All" and self.nights_spin.specialValueText() =="undefine" :
+        if not self.selected_cities and self.sea_combo.currentText() == "All" and self.nights_spin.specialValueText() =="undefine" and self.ship_combo.currentText() == "Choose a Ship":
             filtered_results = self.df  # Pas de filtres appliqués
         else:
             filtered_results = self.get_filtered_results()
+            #self.display_result_table(filtered_results)
 
         self.ship_combo.clear()
         self.ship_combo.addItem("Choose a Ship")
