@@ -16,3 +16,4 @@ def get_user_balance(name):
             ''', (name,))
     balance = cursor.fetchone()
     return balance[0] if balance else 0
+

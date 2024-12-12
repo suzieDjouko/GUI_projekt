@@ -197,6 +197,30 @@ QPushButton:pressed {
 """
 
 
+back_button_style = """
+    QPushButton {
+        background-color: #60a698;
+        color: #333;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    QPushButton:hover {
+        background-color: #e6e6e6;
+        border-color: #aaa;
+    }
+    QPushButton:pressed {
+        background-color: #dcdcdc;
+        border-color: #888;
+    }
+    QPushButton:disabled {
+        background-color: #f9f9f9;
+        color: #aaa;
+        border-color: #ddd;
+    }
+"""
 
 
 

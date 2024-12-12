@@ -59,3 +59,21 @@
         for i, row in df.iterrows():
             for j, value in enumerate(row):
                 self.table.setItem(i, j, QTableWidgetItem(str(value)))
+
+
+            def on_night_spin_changed(self):
+        """
+        Met à jour le DataFrame filtré lorsque la valeur du QSpinBox change.
+        """
+        selected_night = self.nights_spin.value()
+        selected_sea = self.sea_combo.currentText()
+        dataframe_filtre_par_mer = self.filter_by_sea(selected_sea, self.df)
+        dataframe_filre_par_nuit = self.filter_by_night(selected_night, dataframe_filtre_par_mer)
+        print(dataframe_filre_par_nuit)
+        self.city_selection_widget = self.create_city_selection()
+
+         def on_sea_combo_changed(self):
+        selected_sea = self.sea_combo.currentText()
+        filtered_df = self.filter_by_sea(selected_sea, self.df)
+        # Vous pouvez utiliser filtered_df pour mettre à jour l'affichage
+        print(filtered_df)  # Debug ou mettre à jour un tableau PyQt
