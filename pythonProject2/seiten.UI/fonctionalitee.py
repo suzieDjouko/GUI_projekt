@@ -344,7 +344,7 @@ class VoyageApp(QMainWindow):
         buttons_layout.setContentsMargins(0, 50, 0, 80)
 
         reset_button = QPushButton("Reset")
-        reset_button.clicked.connect(self.reset_form2)
+        reset_button.clicked.connect(self.reset_form)
         reset_button.setStyleSheet(reset_button_style)
 
         search_button = QPushButton("Search")
@@ -366,7 +366,7 @@ class VoyageApp(QMainWindow):
         self.result_page.setLayout(self.result_layout)
 
         #PAGE CABINES
-        self.cabintype_folder = "../images/Kabinentypen"
+        #self.cabintype_folder = "../images/Kabinentypen"
 
         self.cabin_layout = QVBoxLayout()
 
@@ -396,9 +396,69 @@ class VoyageApp(QMainWindow):
 
         #PAGE PAYEMENT
         self.payment_layout = QVBoxLayout()
-        self.payment_label = QLabel("PAYEMENT")
 
+        # Payment Page Title
+        self.payment_label = QLabel("Payment")
+        self.payment_label.setAlignment(Qt.AlignCenter)
+        self.payment_label.setStyleSheet("font-size: 24px; font-weight: bold; margin-bottom: 20px;")
+        self.payment_layout.addWidget(self.payment_label)
 
+        # Payment Details Section
+        self.payment_details_layout = QVBoxLayout()
+
+        # Add Cabin Details
+        self.cabin_details_label = QLabel()
+        self.cabin_details_label.setStyleSheet("font-size: 16px; margin-bottom: 10px;")
+        self.payment_details_layout.addWidget(self.cabin_details_label)
+
+        # Add Total Price Label
+        self.total_price_label = QLabel("Total Price: €0")
+        self.total_price_label.setStyleSheet("font-size: 18px; font-weight: bold; color: green; margin-bottom: 20px;")
+        self.payment_details_layout.addWidget(self.total_price_label)
+
+        # Add Payment Details Layout to the Main Layout
+        self.payment_layout.addLayout(self.payment_details_layout)
+
+        # Payment Methods Section
+        self.payment_methods_label = QLabel("Choose a Payment Method:")
+        self.payment_methods_label.setStyleSheet("font-size: 16px; margin-bottom: 10px;")
+        self.payment_layout.addWidget(self.payment_methods_label)
+
+        # Payment Methods Dropdown
+        self.payment_methods_combo = QComboBox()
+        self.payment_methods_combo.addItems(["Credit Card", "PayPal", "Bank Transfer"])
+        self.payment_methods_combo.setStyleSheet("font-size: 14px; padding: 5px; margin-bottom: 20px;")
+        self.payment_layout.addWidget(self.payment_methods_combo)
+
+        # Buttons Section
+        self.payment_buttons_layout = QHBoxLayout()
+
+        # Back Button
+        self.payment_back_button = QPushButton("Return")
+        self.payment_back_button.setStyleSheet(back_button_style)
+        self.payment_back_button.clicked.connect(
+            lambda: self.stacked_widget.setCurrentWidget(self.cabin_page))  # Navigate back
+        self.payment_buttons_layout.addWidget(self.payment_back_button)
+
+        # Proceed to Payment Button
+        self.proceed_button = QPushButton("Proceed to Payment")
+        self.proceed_button.setStyleSheet(
+            """
+            background-color: green; 
+            color: white; 
+            font-size: 14px; 
+            padding: 10px;
+            border-radius: 8px;
+            """
+        )
+        self.proceed_button.clicked.connect(self.process_payment)  # Implement payment processing
+        self.payment_buttons_layout.addWidget(self.proceed_button)
+
+        # Add Buttons Layout to Main Payment Layout
+        self.payment_layout.addLayout(self.payment_buttons_layout)
+
+        # Set Layout for the Payment Page
+        self.payment_page.setLayout(self.payment_layout)
 
         # FOOTER
         self.footer_layout = QHBoxLayout()
@@ -480,17 +540,21 @@ class VoyageApp(QMainWindow):
 
         return df_filtered
 
+    def process_payment(self):
+        """
+        Process the payment after the user selects a payment method.
+        """
+        selected_method = self.payment_methods_combo.currentText()
 
-    def getfilredresult_final(self):
-        selected_ship = self.ship_combo.currentText()
-        filtered_data = self.get_filtered_results()
+        QMessageBox.information(
+            self,
+            "Payment Successful",
+            f"Your payment using {selected_method} has been successfully processed!"
+        )
 
-        if selected_ship and "Schiffstyp" in filtered_data.columns:
-            filtered_data = self.filter_by_ship(selected_ship, filtered_data)
-
-            print(f"Filtrage par bateau : {selected_ship}")
-            print(f"Filtrage par bateau : {filtered_data}")
-        return filtered_data
+        # Redirect or reset after payment
+        self.reset_form()
+        self.stacked_widget.setCurrentWidget(self.selection_page)  # Navigate back to selection
 
     def display_result_table(self, filtered_data):
         """Affiche les voyages filtrés dans la table des résultats."""
@@ -610,90 +674,137 @@ class VoyageApp(QMainWindow):
 
         self.display_cabin_images(row_data)
 
-
-
     def display_cabin_images(self, row_data):
         self.clear_layout(self.cabin_layout)
 
-        """Affiche les images des cabines disponibles pour le voyage sélectionné."""
-        cabine_types = ["Innenkabine", "Aussenkabine", "Balkonkabine", "Luxuskabine1", "Luxuskabine2", "Luxuskabine3"]
-        user_balance = get_user_balance(self.header_user_name_edit.text())  # Solde utilisateur récupéré dynamiquement
+        # List of cabin types with their descriptions
+        cabin_details = {
+            "Innenkabine": "Comfortable and budget-friendly, ideal for travelers seeking functionality.",
+            "Aussenkabine": "Bright and serene with a porthole view of the sea.",
+            "Balkonkabine": "Enjoy fresh air and an open view from your private balcony.",
+            "Luxuskabine1": "Luxurious and spacious, including premium services.",
+            "Luxuskabine2": "Elegant with a private lounge and minibar, perfect for exceptional trips.",
+            "Luxuskabine3": "Ultimate luxury with a large space, jacuzzi, and exclusive concierge service."
+        }
 
-        for cabine_type in cabine_types:
-            cabine_price = row_data.get(cabine_type, 0)
-            if cabine_price > 0:
-                image_path = self.get_cabin_image_path(cabine_type)
+        user_balance = get_user_balance(self.header_user_name_edit.text())  # Get user balance dynamically
 
-                # Ajouter l'image et les détails de la cabine
-                cabin_layout = QHBoxLayout()
-                image_label = QLabel()
-                image_label.setPixmap(QPixmap(image_path).scaled(380, 300, Qt.KeepAspectRatio))
-                cabin_layout.addWidget(image_label)
+        for cabin_type, description in cabin_details.items():
+            cabin_price = row_data.get(cabin_type, "not available")  # Retrieve cabin price or "not available"
+            image_path = self.get_cabin_image_path(cabin_type)  # Retrieve the image path for the cabin
 
-                info_layout = QVBoxLayout()
-                name_label = QLabel(cabine_type)
-                name_label.setStyleSheet("font-size: 16px; font-weight: bold; margin-bottom: 5px;")
-                info_layout.addWidget(name_label)
+            # Display cabin image and information
+            cabin_layout = QHBoxLayout()
 
-                line = QFrame()
-                line.setFrameShape(QFrame.HLine)
-                line.setFrameShadow(QFrame.Sunken)
-                info_layout.addWidget(line)
+            # Cabin image
+            image_label = QLabel()
+            if image_path:
+                image_label.setPixmap(QPixmap(image_path).scaled(380, 250, Qt.KeepAspectRatio))  # Appropriate size
+            else:
+                image_label.setText("Image not available")
+            cabin_layout.addWidget(image_label)
 
-                characteristics_label = QLabel("Caractéristiques : Classique, Lumineuse")
-                characteristics_label.setStyleSheet("font-size: 14px; margin-top: 5px;")
-                info_layout.addWidget(characteristics_label)
+            # Cabin information
+            info_layout = QVBoxLayout()
+            name_label = QLabel(f"<b>{cabin_type}</b>")
+            name_label.setStyleSheet("font-size: 20px; font-weight: bold; margin-bottom: 5px;")
+            info_layout.addWidget(name_label)
 
-                price_button_layout = QVBoxLayout()
-                price_button_layout.setAlignment(Qt.AlignRight | Qt.AlignBottom)
+            # Cabin description
+            characteristics_label = QLabel(description)
+            characteristics_label.setStyleSheet("font-size: 16px; margin-top: 5px; margin-bottom: 10px;")
+            info_layout.addWidget(characteristics_label)
 
-                price_label = QLabel(f"Prix : {cabine_price} €")
+            # Horizontal line
+            line = QFrame()
+            line.setFrameShape(QFrame.HLine)
+            line.setFrameShadow(QFrame.Sunken)
+            info_layout.addWidget(line)
+
+            # Display price
+            if cabin_price == "not available" or cabin_price == 0:
+                price_label = QLabel("Price: Not Available")
+                price_label.setStyleSheet("font-size: 20px; color: gray;")
+                info_layout.addWidget(price_label)
+            else:
+                price_label = QLabel(f" {cabin_price} €")
                 price_label.setStyleSheet(
-                    "font-size: 14px; color: green;" if cabine_price <= user_balance else "font-size: 14px; color: red;")
-                price_button_layout.addWidget(price_label)
+                    "font-size: 20px; color: green;" if cabin_price <= user_balance else "font-size: 14px; color: red;"
+                )
+                info_layout.addWidget(price_label)
 
-                choose_button = QPushButton("Choisir")
-                choose_button.setEnabled(cabine_price <= user_balance)  # Désactiver si le prix dépasse le solde
+            # "Choose" button
+            button_layout = QVBoxLayout()  # Layout for positioning the button at the bottom-right
+            button_layout.addStretch()  # Add flexible spacing
+            choose_button = QPushButton("Pay")
+            choose_button.setFixedSize(120, 50)
+            if cabin_price == "not available" or cabin_price == 0 or cabin_price > user_balance:
+                choose_button.setEnabled(False)
                 choose_button.setStyleSheet(
-                    "background-color: #007bff; color: white; border-radius: 5px; padding: 5px;" if cabine_price <= user_balance else "background-color: lightgray; color: gray; border-radius: 5px; padding: 5px;")
-                choose_button.clicked.connect(lambda _, ct=cabine_type, cp=cabine_price: self.on_cabin_selected(ct, cp))
-                price_button_layout.addWidget(choose_button)
+                    "background-color: lightgray; color: gray; border-radius: 8px; padding: 10px; font-size:16px"
+                )
+                if cabin_price == "not available" or cabin_price == 0:
+                    choose_button.setToolTip("Cabin not available")
+                else:
+                    choose_button.setToolTip("Insufficient balance")
+            else:
+                choose_button.setEnabled(True)
+                choose_button.setStyleSheet(
+                    "background-color: #007bff; color: white; border-radius: 8px; padding: 10px; font-size:16px"
+                )
+                choose_button.clicked.connect(lambda _, ct=cabin_type, cp=cabin_price: self.on_cabin_selected(ct, cp))
 
-                info_layout.addLayout(price_button_layout)
+            button_layout.addWidget(choose_button, alignment=Qt.AlignRight)  # Position the button at the bottom-right
+            info_layout.addLayout(button_layout)
 
-                cabin_layout.addLayout(info_layout)
+            cabin_layout.addLayout(info_layout)
 
-                cabin_widget = QWidget()
-                cabin_widget.setLayout(cabin_layout)
-                self.cabin_layout.addWidget(cabin_widget)
+            # Add the cabin layout to the main cabin layout
+            cabin_widget = QWidget()
+            cabin_widget.setLayout(cabin_layout)
+            self.cabin_layout.addWidget(cabin_widget)
 
-    # def update_result_page(self):
-        # Effacer l'ancienne table
-       # self.result_table.setRowCount(0)
-        # Ajouter de nouvelles lignes pour les résultats filtrés
-        #self.create_result_table()
+            # Add a horizontal separator under each cabin section
+            separator = QFrame()
+            separator.setFrameShape(QFrame.HLine)
+            separator.setFrameShadow(QFrame.Sunken)
+            self.cabin_layout.addWidget(separator)
+
     def get_cabin_image_path(self, cabin_type):
+        cabin_images= {
+            "Innenkabine":"../images/Kabinentypen/Innenkabine.JPG",
+            "Aussenkabine": "../images/Kabinentypen/Aussenkabine.JPG",
+            "Balkonkabine": "../images/Kabinentypen/Balkonkabine.JPG",
+            "Luxuskabine1": "../images/Kabinentypen/Luxuskabine Kategorie 1.jpg",
+            "Luxuskabine2": "../images/Kabinentypen/Luxuskabine Kategorie 2.jpg",
+            "Luxuskabine3": "../images/Kabinentypen/Luxuskabine Kategorie 3.jpg",
+        }
+        image_path = cabin_images.get(cabin_type)
+        if image_path and os.path.exists(image_path):
+            return image_path
+        else:
+            return None
 
-        extensions = [".jpg", ".JPG"]
-        possible_names = [
-            cabin_type,
-            cabin_type.replace(" ", "_")
-        ]
+    def on_cabin_selected(self, cabin_type, cabin_price):
 
-        for name in possible_names:
-            for ext in extensions:
-                image_path = os.path.join(self.cabintype_folder, f"{name}{ext}")
-                if os.path.exists(image_path):
-                    return image_path
+        # Switch to the payment page
+        self.stacked_widget.setCurrentWidget(self.payment_page)
 
-        return None  # Aucun chemin trouvé
+        # Update payment page details (optional, based on your payment page design)
+        self.update_payment_page(cabin_type, cabin_price)
 
-    def on_cabin_selected(self, cabine_type):
+    def update_payment_page(self, cabin_type, cabin_price):
         """
-        Gère la sélection d'une cabine par l'utilisateur.
+        Update payment page details with selected cabin and price.
         """
-        QMessageBox.information(self, "Cabine sélectionnée",
-                                f"Vous avez sélectionné une {cabine_type}.")
+        # Update cabin details label
+        self.cabin_details_label.setText(
+            f"<b>Selected Cabin:</b> {cabin_type}<br>"
+            f"<b>Price:</b> {cabin_price} €"
+        )
+
+        # Update total price label
+        self.total_price_label.setText(f"Total Price: {cabin_price} €")
 
     def load_ship_types(self):
         """Charger les types de navires dans la barre déroulante."""
@@ -815,14 +926,6 @@ class VoyageApp(QMainWindow):
 
         print(f"Villes sélectionnées : {self.selected_cities}")
 
-    def reset_form2(self):
-        """Réinitialiser tous les choix du formulaire."""
-        self.sea_combo.setCurrentIndex(0)
-        self.nights_spin.setValue(0)
-        self.selected_cities.clear()
-        self.ship_combo.setCurrentIndex(0)
-        self.ship_image_label.clear()
-
     def reset_form(self):
         """Réinitialiser tous les choix du formulaire."""
         # Réinitialiser la sélection des mers
@@ -843,13 +946,7 @@ class VoyageApp(QMainWindow):
         self.ship_combo.setCurrentIndex(0)
         self.ship_image_label.clear()  # Effacer l'image du navire sélectionné
 
-        # Réinitialiser la sélection des types de cabines
-        #self.cabin_combo.setCurrentIndex(0)
-        #self.cabin_image_label.clear()  # Effacer l'image de la cabine sélectionnée
 
-        # Effacer le tableau des résultats
-        #self.table.clearContents()
-        #self.table.setRowCount(0)
 
 
     def show_error(self, message):
