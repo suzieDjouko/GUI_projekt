@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QListView, QMessageBox, QPushButton, QApplication
 from PyQt5.QtCore import QStringListModel
-from fonctionalitee import VoyageApp  # Assurez-vous que VoyageApp est bien défini dans ce fichier
+from fonctionalitee import Reise  # Assurez-vous que VoyageApp est bien défini dans ce fichier
 
 
 class TravelSelectionWidget(QWidget):
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     # Exemple d'utilisation avec un solde d'utilisateur et des données de voyage
-    voyage_app = VoyageApp()
+    voyage_app = Reise()
     user_balance = voyage_app.kontostand_amont_edit  # Solde utilisateur
     trips_data = voyage_app.get_filtered_results()  # Données des voyages filtrées
 

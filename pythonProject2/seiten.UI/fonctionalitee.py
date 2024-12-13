@@ -264,7 +264,6 @@ class Reise(QMainWindow):
         self.stacked_widget.addWidget(self.payment_page)
         self.stacked_widget.setCurrentWidget(self.selection_page)
         #main_layout.addWidget(self.stacked_widget)
-        self.stacked_widget.setCurrentWidget(self.selection_page)
 
         self.menu_selection_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.selection_page))
         self.menu_result_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.result_page))
@@ -306,9 +305,9 @@ class Reise(QMainWindow):
         # Section des villes
         #selection_layout = QVBoxLayout()
         city_title = QLabel("Cities: ")
-       # city_title.setObjectName("city_title")
         selection_layout.addWidget(city_title)
         self.city_scroll_area = QScrollArea()
+        self.city_scroll_area.setMinimumSize(800, 300)
         self.city_selection_widget = self.create_city_selection()
         self.city_scroll_area.setContentsMargins(0, 0, 0, 30)
         self.city_scroll_area.setWidget(self.city_selection_widget)
@@ -460,33 +459,6 @@ class Reise(QMainWindow):
         # Set Layout for the Payment Page
         self.payment_page.setLayout(self.payment_layout)
 
-        # FOOTER
-        self.footer_layout = QHBoxLayout()
-        self.footer_layout.setContentsMargins(0, 0, 30, 40)
-
-        self.footer_prev_button = QPushButton()
-        self.footer_prev_button.setIcon(QIcon("../icon/reshot-icon-rewind.svg"))
-        self.footer_prev_button.setIconSize(QSize(140, 40))
-        self.footer_prev_button.setContentsMargins(0, 0, 0, 0)
-        self.footer_prev_button.setStyleSheet(footer_prev_style)
-
-        self.footer_next_button = QPushButton()
-        self.footer_next_button.setIcon(QIcon('../icon/reshot-icon-fast-forward.svg'))
-        self.footer_next_button.setIconSize(QSize(140, 40))
-        self.footer_next_button.setStyleSheet(footer_next_style)
-
-        #self.footer_prev_button.clicked.connect(self.on_previous_button_click)
-        #self.footer_next_button.clicked.connect(self.on_next_button_click)
-
-        self.footer_layout = QHBoxLayout()
-        self.footer_layout.setContentsMargins(0, 0, 30, 40)
-
-        self.footer_layout.addStretch()
-        self.footer_layout.addWidget(self.footer_prev_button)
-        self.footer_layout.addSpacing(100)
-        self.footer_layout.addWidget(self.footer_next_button)
-        self.setLayout(self.footer_layout)
-
 
         main_layout = QVBoxLayout()
         main_layout.addLayout(self.headerLayout)
@@ -497,7 +469,6 @@ class Reise(QMainWindow):
         self.payment_page.setLayout(self.payment_layout)
 
         main_layout.addWidget(self.stacked_widget)
-        main_layout.addLayout(self.footer_layout)
 
         # Configurer la fenêtre principale
         container = QWidget()
@@ -505,9 +476,10 @@ class Reise(QMainWindow):
         container.setLayout(main_layout)
         self.setCentralWidget(container)
 
-
-
     def get_filtered_results(self):
+        """
+        Applique les filtres sélectionnés par l'utilisateur et retourne un DataFrame filtré.
+        """
 
         # Obtenir les valeurs des filtres
         selected_night = self.nights_spin.value()
@@ -522,10 +494,12 @@ class Reise(QMainWindow):
         # Filtrer par nuit si défini
         if selected_night != 0:
             df_filtered = self.filter_by_night(selected_night, df_filtered)
-        #si au moins une ville dans la colone 'Besuchte Stadte
+
+        # Filtrer par navire si défini
         if selected_ship and selected_ship != "Choose a Ship":
             df_filtered = self.filter_by_ship(selected_ship, df_filtered)
 
+        # Filtrer par villes visitées
         if self.selected_cities:
             def match_cities(cities):
                 if not isinstance(cities, str):  # Sécurité contre les valeurs non textuelles
@@ -534,9 +508,22 @@ class Reise(QMainWindow):
 
             df_filtered = df_filtered[df_filtered["Besuchte_Städte"].apply(match_cities)]
 
+        # Convertir les colonnes des prix en valeurs numériques
+        cabin_columns = ['Innenkabine', 'Aussenkabine', 'Balkonkabine',
+                         'Luxuskabine1', 'Luxuskabine2', 'Luxuskabine3']
+
+        for col in cabin_columns:
+            df_filtered[col] = pd.to_numeric(df_filtered[col], errors='coerce')  # Remplacer les erreurs par NaN
+
+        # Remplacer les NaN par une valeur par défaut (exemple : prix très élevé pour indisponible)
+        df_filtered.fillna({col: float('inf') for col in cabin_columns}, inplace=True)
+
+        # Debugging pour valider les étapes de filtrage
         print(f"Filtrage par Meerart : {selected_sea}")
         print(f"Filtrage par Übernachtungen : {selected_night}")
         print(f"Villes sélectionnées : {self.selected_cities}")
+        print(f"Nombre de voyages après filtrage : {len(df_filtered)}")
+        print(df_filtered)
 
         return df_filtered
 
@@ -959,8 +946,24 @@ class Reise(QMainWindow):
         return dataframe[dataframe["Meerart"] == selected_sea]
 
     def filter_by_ship(self, selected_ship, dataframe):
-        return dataframe if not selected_ship or selected_ship == "Choose a Ship" else dataframe[
-            dataframe["Schiffstyp"].str.contains(selected_ship, na=False, case=False)]
+        # Nettoyer la valeur sélectionnée
+        selected_ship = selected_ship.strip().lower()
+
+        # Nettoyer les données de la colonne "Schiffstyp"
+        dataframe["Schiffstyp"] = dataframe["Schiffstyp"].str.strip().str.lower().fillna("")
+
+        # Appliquer le filtre
+        if not selected_ship or selected_ship == "choose a ship":
+            return dataframe  # Aucun filtre si aucun navire sélectionné
+
+        filtered_df = dataframe[dataframe["Schiffstyp"].str.contains(selected_ship, na=False)]
+
+        # Debugging
+        print(f"Filtering by ship: {selected_ship}")
+        print(f"Rows after ship filter: {len(filtered_df)}")
+        print(filtered_df)
+
+        return filtered_df
 
     def filter_by_night(self, selected_night, dataframe):
 
@@ -992,6 +995,6 @@ class Reise(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = VoyageApp()
+    window = Reise()
     window.show()
     sys.exit(app.exec_())
