@@ -1,6 +1,5 @@
 import sqlite3
 
-import bcrypt
 
 
 conn = sqlite3.connect('User.sqlite')

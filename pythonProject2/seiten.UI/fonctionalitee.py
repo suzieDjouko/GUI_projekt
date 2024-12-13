@@ -15,7 +15,7 @@ from styles import *
 from database_action import get_user_balance
 
 
-class VoyageApp(QMainWindow):
+class Reise(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("BlauWelle")
