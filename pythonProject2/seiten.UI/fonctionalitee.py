@@ -6,7 +6,7 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QLabel, QMessageBox,
     QTableWidget, QTableWidgetItem, QScrollArea, QGridLayout, QPushButton, QComboBox, QSpinBox, QSizePolicy, QLineEdit,
-    QSpacerItem, QStackedWidget, QFrame
+    QSpacerItem, QStackedWidget, QFrame, QListWidget, QListWidgetItem
 )
 from PyQt5.QtGui import QPixmap, QIcon, QColor
 from PyQt5.QtCore import Qt
@@ -361,8 +361,8 @@ class VoyageApp(QMainWindow):
         self.result_layout = QVBoxLayout()
         self.result_label = QLabel("List of Trips:")
         self.result_layout.addWidget(self.result_label)
-        self.result_table = QTableWidget()
-        self.result_layout.addWidget(self.result_table)
+        self.result_list = QListWidget()
+        self.result_layout.addWidget(self.result_list)
         self.result_page.setLayout(self.result_layout)
 
         #PAGE CABINES
@@ -460,34 +460,6 @@ class VoyageApp(QMainWindow):
         # Set Layout for the Payment Page
         self.payment_page.setLayout(self.payment_layout)
 
-        # FOOTER
-        self.footer_layout = QHBoxLayout()
-        self.footer_layout.setContentsMargins(0, 0, 30, 40)
-
-        self.footer_prev_button = QPushButton()
-        self.footer_prev_button.setIcon(QIcon("../icon/reshot-icon-rewind.svg"))
-        self.footer_prev_button.setIconSize(QSize(140, 40))
-        self.footer_prev_button.setContentsMargins(0, 0, 0, 0)
-        self.footer_prev_button.setStyleSheet(footer_prev_style)
-
-        self.footer_next_button = QPushButton()
-        self.footer_next_button.setIcon(QIcon('../icon/reshot-icon-fast-forward.svg'))
-        self.footer_next_button.setIconSize(QSize(140, 40))
-        self.footer_next_button.setStyleSheet(footer_next_style)
-
-        #self.footer_prev_button.clicked.connect(self.on_previous_button_click)
-        #self.footer_next_button.clicked.connect(self.on_next_button_click)
-
-        self.footer_layout = QHBoxLayout()
-        self.footer_layout.setContentsMargins(0, 0, 30, 40)
-
-        self.footer_layout.addStretch()
-        self.footer_layout.addWidget(self.footer_prev_button)
-        self.footer_layout.addSpacing(100)
-        self.footer_layout.addWidget(self.footer_next_button)
-        self.setLayout(self.footer_layout)
-
-
         main_layout = QVBoxLayout()
         main_layout.addLayout(self.headerLayout)
         main_layout.addLayout(self.menuLayout)
@@ -497,7 +469,7 @@ class VoyageApp(QMainWindow):
         self.payment_page.setLayout(self.payment_layout)
 
         main_layout.addWidget(self.stacked_widget)
-        main_layout.addLayout(self.footer_layout)
+
 
         # Configurer la fenêtre principale
         container = QWidget()
@@ -518,6 +490,7 @@ class VoyageApp(QMainWindow):
         # Filtrer par mer
         if selected_sea != "All":
             df_filtered = self.filter_by_sea(selected_sea, df_filtered)
+            print(df_filtered)
 
         # Filtrer par nuit si défini
         if selected_night != 0:
@@ -556,84 +529,76 @@ class VoyageApp(QMainWindow):
         self.reset_form()
         self.stacked_widget.setCurrentWidget(self.selection_page)  # Navigate back to selection
 
-    def display_result_table(self, filtered_data):
-        """Affiche les voyages filtrés dans la table des résultats."""
-        # Réinitialiser la table
-        self.reset_table()
+    def add_result_item_with_cabins(self, row_data):
+        """
+        Add a trip to the QListWidget with details on one line and a "Choose" button aligned to the right.
+        """
+        try:
+            # Get the user's balance (if needed for future enhancements)
+            user_balance = get_user_balance(self.header_user_name_edit.text())
+            print(f"User balance: {user_balance} €")  # Debugging
 
-        # Obtenir le solde de l'utilisateur
-        user_balance = get_user_balance(self.header_user_name_edit.text())
+            # Create a QWidget to represent the trip
+            item_widget = QWidget()
+            item_layout = QHBoxLayout(item_widget)
+            item_layout.setContentsMargins(5, 5, 5, 5)
+
+            # Format trip details as a single string
+            visited_cities = row_data.get("Besuchte_Städte", "Unknown")
+            trip_details_text = (
+                f"Trip {row_data['Reisenummer']}: {row_data['Meerart']}, "
+                f"{row_data['Übernachtungen']} nights, {visited_cities}"
+            )
+            trip_details_label = QLabel(trip_details_text)
+            trip_details_label.setStyleSheet("font-size: 14px;")
+            trip_details_label.setWordWrap(False)  # Keep it on one line
+            item_layout.addWidget(trip_details_label)
+
+            # Add spacer to push the button to the right
+            spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+            item_layout.addItem(spacer)
+
+            # Add the "Choose" button
+            choose_button = QPushButton("Choose")
+            choose_button.setFixedSize(120, 40)
+            choose_button.setStyleSheet("background-color: #007bff; color: white; font-size: 14px;")
+            choose_button.clicked.connect(lambda: self.on_choose_button_clicked(row_data))
+            item_layout.addWidget(choose_button)
+
+            # Add the widget to the QListWidget
+            list_item = QListWidgetItem(self.result_list)
+            list_item.setSizeHint(item_widget.sizeHint())  # Adjust the size to fit content
+            self.result_list.addItem(list_item)
+            self.result_list.setItemWidget(list_item, item_widget)
+
+            print(f"Added: {trip_details_text}")
+        except Exception as e:
+            print(f"Error adding item: {e}")
+
+    def display_result_table(self, filtered_data):
+        """Display filtered trips in the QListWidget with details on one line."""
+        self.result_list.clear()  # Reset the list
 
         if filtered_data.empty:
-            self.result_label.setText("Aucun résultat trouvé.")
+            self.result_label.setText("No results found.")
             return
 
-        # Configurer la table
-        self.result_table.setRowCount(len(filtered_data))
-        self.result_table.setColumnCount(len(filtered_data.columns) + 1)
-        self.result_table.setHorizontalHeaderLabels(list(filtered_data.columns) + ["Choisir"])
+        # Add each trip to the list
+        for _, row_data in filtered_data.iterrows():
+            self.add_result_item_with_cabins(row_data)
 
-        # Remplir la table
-        for i, row_data in filtered_data.iterrows():
-            abordable = False  # Vérifie si au moins une cabine est abordable
+        self.result_label.setText("Results found:")
 
-            # Ajouter les données dans les colonnes
-            for j, (col_name, value) in enumerate(row_data.items()):
-                if isinstance(value, int) and col_name in [
-                    "Innenkabine", "Aussenkabine", "Balkonkabine", "Luxuskabine1", "Luxuskabine2", "Luxuskabine3"
-                ]:
-                    # Gestion des prix de cabines
-                    if value == 0:
-                        item = QTableWidgetItem("nicht vorhanden")
-                        item.setFlags(Qt.ItemIsEnabled)  # Désactiver l'édition
-                        item.setForeground(QColor("gray"))
-                    else:
-                        item = QTableWidgetItem(f"{value} €")
-                        if value <= user_balance:
-                            item.setForeground(QColor("green"))  # Prix abordable
-                            abordable = True
-                        else:
-                            item.setForeground(QColor("red"))  # Prix non abordable
-                else:
-                    # Autres colonnes normales
-                    item = QTableWidgetItem(str(value))
-
-                self.result_table.setItem(i, j, item)
-
-
-            # Ajouter un bouton "Choisir"
-            button = QPushButton("Choose")
-
-           # button.clicked.disconnect()  # Déconnecter les anciens signaux, s'ils existent
-
-            if abordable:
-                button.setEnabled(True)
-                button.setStyleSheet(
-                    "background-color: #007bff; color: white; border-radius: 5px; padding: 8px; margin: 4px")
-            else:
-                button.setEnabled(False)
-                button.setStyleSheet(
-                    "background-color: lightgray; color: gray; border-radius: 5px; padding: 8px; margin: 4px")
-                button.setToolTip("Kontostand nicht ausreichend")
-
-            # Connecter l'événement pour sélectionner le voyage
-            button.clicked.connect(lambda _, r=row_data.copy(): self.on_choose_button_clicked(r))
-
-            self.result_table.setCellWidget(i, len(filtered_data.columns), button)
-
-        self.result_table.resizeColumnsToContents()
-
-
-    def reset_result_page(self):
-        """Réinitialiser la page des résultats."""
-        self.reset_table()
-        filtered_data = self.get_filtered_results()
-        self.display_result_table(filtered_data)
-
-    def reset_table(self):
-        self.result_table.setRowCount(0)
-        self.result_table.setColumnCount(0)
-        #self.result_table.setHorizontalHeaderLabels([])
+    def on_cabin_selected(self, cabin_type, cabin_price):
+        """Gère la sélection d'une cabine par l'utilisateur."""
+        QMessageBox.information(
+            self,
+            "Cabine Sélectionnée",
+            f"Vous avez sélectionné la cabine {cabin_type} pour {cabin_price} €."
+        )
+        # Naviguer vers la page de paiement ou effectuer d'autres actions
+        self.stacked_widget.setCurrentWidget(self.payment_page)
+        self.update_payment_page(cabin_type, cabin_price)
 
     def reset_cabin_page(self):
         """Réinitialiser la page des cabines."""
@@ -643,7 +608,7 @@ class VoyageApp(QMainWindow):
     def on_back_to_results_clicked(self):
         """Retourner à la page des résultats."""
         #self.reset_cabin_page()  # Réinitialiser la page des cabines
-        self.reset_result_page()  # Réinitialiser la page des résultats
+        #self.reset_result_page()  # Réinitialiser la page des résultats
         self.stacked_widget.setCurrentWidget(self.result_page)  # Naviguer vers la page des résultats
 
     def clear_layout(self, layout):
@@ -654,7 +619,6 @@ class VoyageApp(QMainWindow):
                 child.widget().deleteLater()
 
     def on_search_button_clicked(self):
-        self.reset_result_page()
         self.stacked_widget.setCurrentWidget(self.result_page)
 
     def on_choose_button_clicked(self, row_data):
@@ -785,13 +749,13 @@ class VoyageApp(QMainWindow):
         else:
             return None
 
-    def on_cabin_selected(self, cabin_type, cabin_price):
+    #def on_cabin_selected(self, cabin_type, cabin_price):
 
         # Switch to the payment page
-        self.stacked_widget.setCurrentWidget(self.payment_page)
+        #self.stacked_widget.setCurrentWidget(self.payment_page)
 
         # Update payment page details (optional, based on your payment page design)
-        self.update_payment_page(cabin_type, cabin_price)
+        #self.update_payment_page(cabin_type, cabin_price)
 
     def update_payment_page(self, cabin_type, cabin_price):
         """

@@ -77,3 +77,90 @@
         filtered_df = self.filter_by_sea(selected_sea, self.df)
         # Vous pouvez utiliser filtered_df pour mettre à jour l'affichage
         print(filtered_df)  # Debug ou mettre à jour un tableau PyQt
+
+
+
+
+
+        def display_result_table(self, filtered_data):
+        """Affiche les voyages filtrés dans la table des résultats."""
+        # Réinitialiser la table
+        self.reset_table()
+
+        # Obtenir le solde de l'utilisateur
+        user_balance = get_user_balance(self.header_user_name_edit.text())
+
+        if filtered_data.empty:
+            self.result_label.setText("Aucun résultat trouvé.")
+            return
+
+        # Configurer la table
+        self.result_table.setRowCount(len(filtered_data))
+        self.result_table.setColumnCount(len(filtered_data.columns) + 1)
+        self.result_table.setHorizontalHeaderLabels(list(filtered_data.columns) + ["Choose"])
+
+        # Remplir la table
+        for i, row_data in filtered_data.iterrows():
+            abordable = False  # Vérifie si au moins une cabine est abordable
+
+            # Ajouter les données dans les colonnes
+            for j, (col_name, value) in enumerate(row_data.items()):
+                if isinstance(value, int) and col_name in [
+                    "Innenkabine", "Aussenkabine", "Balkonkabine", "Luxuskabine1", "Luxuskabine2", "Luxuskabine3"
+                ]:
+                    # Gestion des prix de cabines
+                    if value == 0:
+                        item = QTableWidgetItem("nicht vorhanden")
+                        item.setFlags(Qt.ItemIsEnabled)  # Désactiver l'édition
+                        item.setForeground(QColor("gray"))
+                    else:
+                        item = QTableWidgetItem(f"{value} €")
+                        if value <= user_balance:
+                            item.setForeground(QColor("green"))  # Prix abordable
+                            abordable = True
+                        else:
+                            item.setForeground(QColor("red"))  # Prix non abordable
+                else:
+                    # Autres colonnes normales
+                    item = QTableWidgetItem(str(value))
+
+                self.result_table.setItem(i, j, item)
+
+
+            # Ajouter un bouton "Choisir"
+            button = QPushButton("Choose")
+
+           # button.clicked.disconnect()  # Déconnecter les anciens signaux, s'ils existent
+
+            if abordable:
+                button.setEnabled(True)
+                button.setStyleSheet(
+                    "background-color: #007bff; color: white; border-radius: 5px; padding: 8px; margin: 4px")
+            else:
+                button.setEnabled(False)
+                button.setStyleSheet(
+                    "background-color: lightgray; color: gray; border-radius: 5px; padding: 8px; margin: 4px")
+                button.setToolTip("Kontostand nicht ausreichend")
+
+            # Connecter l'événement pour sélectionner le voyage
+            button.clicked.connect(lambda _, r=row_data.copy(): self.on_choose_button_clicked(r))
+
+            self.result_table.setCellWidget(i, len(filtered_data.columns), button)
+
+        self.result_table.resizeColumnsToContents()
+
+
+
+
+
+         def reset_result_page(self):
+        """Réinitialiser la page des résultats."""
+        self.reset_table()
+        filtered_data = self.get_filtered_results()
+        self.display_result_table(filtered_data)
+
+    def reset_table(self):
+        self.result_table.setRowCount(0)
+        self.result_table.setColumnCount(0)
+        #self.result_table.setHorizontalHeaderLabels([])
+
