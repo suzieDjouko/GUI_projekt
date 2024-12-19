@@ -164,3 +164,38 @@
         self.result_table.setColumnCount(0)
         #self.result_table.setHorizontalHeaderLabels([])
 
+
+
+
+
+    def get_filtered_results(self):
+
+        # Obtenir les valeurs des filtres
+        selected_night = self.nights_spin.value()
+        selected_sea = self.sea_combo.currentText()
+        selected_ship = self.ship_combo.currentText()
+        df_filtered = self.df.copy()
+
+        # Filtrer par mer
+        if selected_sea != "All":
+            df_filtered = self.filter_by_sea(selected_sea, df_filtered)
+        # Filtrer par nuit si défini
+        if selected_night != 0:
+            df_filtered = self.filter_by_night(selected_night, df_filtered)
+        #si au moins une ville dans la colone 'Besuchte Stadte
+        if selected_ship and selected_ship != "Choose a Ship":
+            df_filtered = self.filter_by_ship(selected_ship, df_filtered)
+
+        if self.selected_cities:
+            def match_cities(cities):
+                if not isinstance(cities, str):  # Sécurité contre les valeurs non textuelles
+                    return False
+                return any(city.strip() in self.selected_cities for city in cities.split(","))
+
+            df_filtered = df_filtered[df_filtered["Besuchte_Städte"].apply(match_cities)]
+
+        print(f"Filtrage par Meerart : {selected_sea}")
+        print(f"Filtrage par Übernachtungen : {selected_night}")
+        print(f"Villes sélectionnées : {self.selected_cities}")
+
+        return df_filtered

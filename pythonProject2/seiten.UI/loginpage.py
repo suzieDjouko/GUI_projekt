@@ -1,12 +1,12 @@
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMainWindow, QApplication, QLabel, QLineEdit, QPushButton, QMessageBox, QWidget, \
-    QVBoxLayout, QHBoxLayout, QFrame, QFormLayout
+    QVBoxLayout, QHBoxLayout, QFrame, QFormLayout, QSizePolicy, QSpacerItem
 from PyQt5.QtGui import QPixmap
 
 from fonctionalitee import VoyageApp
 from utiles import show_success_message ,show_warning_message , is_valid_email
 from database_action import *
-import re
+from styles import *
 import sqlite3
 import random
 import sys
@@ -32,148 +32,100 @@ class LoginRegisterPage(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Login")
-        self.resize(1700, 1200)
+        screen = QApplication.primaryScreen()
+        screen_geometry = screen.geometry()
+        screen_width = screen_geometry.width()
+        screen_height = screen_geometry.height()
 
-        screen = QApplication.primaryScreen().geometry()
-        x = (screen.width() - self.width()) // 2
-        y = (screen.height() - self.height()) // 2
-        self.move(x, y)
+        # Redimensionner la fenêtre à 60% de la taille de l'écran
+        self.resize(int(screen_width * 0.5), int(screen_height * 0.7))  # Convertir en entiers
 
-        self.setStyleSheet("""
-            QMainWindow {background-color: #f0f5f9;}
-            QLabel {font-size: 16px; color: #333;}
-            QLineEdit {font-size: 14px;padding: 8px;border: 1px solid #a0a0a0;border-radius: 5px;width: 200px;}
-            """)
+        # Définir les dimensions minimales pour éviter que la fenêtre ne devienne trop petite
+        self.setMinimumSize(800, 600)
+        self.setStyleSheet(loginmainstyle)
 
         # Créer un widget central
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
-        self.main_layout = QHBoxLayout(self.central_widget)
+        self.main_layout = QVBoxLayout(self.central_widget)
         self.main_layout.setContentsMargins(50, 50, 50, 50)
-
-        # Créer un QFrame pour le formulaire et les boutons
-        self.form_frame = QFrame()
-        self.form_frame.setFixedWidth(900)
-        self.form_frame.setFixedHeight(1200)
-        self.form_frame.setStyleSheet("background-color: white; padding: 20px; border-radius: 10px;")
-        self.main_layout.addWidget(self.form_frame)
-
-        # Layout pour les éléments du formulaire avec QVBoxLayout
-        self.grid_layout = QVBoxLayout(self.form_frame)
-        self.grid_layout.setContentsMargins(20, 20, 20, 40)
-        self.grid_layout.setSpacing(15)
-
-        self.label_1 = QLabel("Finde dein Traumziel")
-        self.label_1.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_1.setStyleSheet("font-size: 24px; font-weight: bold; color: #0078d7;")
-        self.grid_layout.addWidget(self.label_1)
-
-        # Image
-        self.image_label = QLabel(self)
-        self.image_pixmap = QPixmap("../images/ships-6073537_640.jpg")
-        self.image_label.setPixmap(self.image_pixmap)
-        self.image_label.setScaledContents(True)
-        self.image_label.setFixedHeight(400)
-        self.grid_layout.addWidget(self.image_label)
-
+        self.main_layout.setSpacing(50)
         # Titre
         self.title = QLabel("Willkommen! Bitte anmelden oder registrieren")
         self.title.setAlignment(QtCore.Qt.AlignCenter)
-        self.title.setStyleSheet("font-size:20px; font-weight: bold; color: #0078d7;")
-        self.grid_layout.addWidget(self.title)
+        self.title.setStyleSheet(logintitlestyle)
+        self.main_layout.addWidget(self.title)
 
-        # Layout pour le formulaire avec espacement réduit entre les labels et les champs
+        # Image
+        self.image_label = QLabel()
+        self.image_pixmap = QPixmap("../images/ships-6073537_640.jpg")
+        self.image_label.setPixmap(self.image_pixmap)
+        self.image_label.setScaledContents(True)
+        self.image_label.setMaximumHeight(500)
+        self.image_label.setStyleSheet(loginimagestyle)
+        self.main_layout.addWidget(self.image_label)
+
+        #Formalar
         self.form_layout = QFormLayout()
-        self.form_layout.setSpacing(50)  # Espacement entre label et input
+        self.form_layout.setContentsMargins(20, 20, 20, 20)
+        self.form_layout.setSpacing(20)
+
+
 
         # Benutzername Label und Eingabefeld
-        self.username_label = QLabel("Benutzername:")
+        username_label = QLabel("Benutzername:")
         self.username_input = QLineEdit()
         self.username_input.setPlaceholderText("Benutzername")
-        self.username_input.setFixedWidth(600)
-        self.form_layout.addRow(self.username_label, self.username_input)
+        self.username_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         # Passwort Label und Eingabefeld
-        self.password_label = QLabel("Passwort:")
+        password_label = QLabel("Passwort:")
         self.password_input = QLineEdit()
-        self.password_input.setEchoMode(QLineEdit.Password)
         self.password_input.setPlaceholderText("Passwort")
-        self.password_input.setFixedWidth(600)
-        self.form_layout.addRow(self.password_label, self.password_input)
-        self.form_layout.setSpacing(40)
+        self.password_input.setEchoMode(QLineEdit.Password)
+        self.password_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        # Ajouter le layout du formulaire au layout principal
-        self.grid_layout.addLayout(self.form_layout)
+        self.form_layout.addRow(username_label, self.username_input)
+        self.form_layout.setSpacing(50)
+        self.form_layout.addRow(password_label, self.password_input)
+        self.main_layout.addLayout(self.form_layout)
+
+        self.main_layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
 
         # Layout des boutons
-        self.button_layout = QHBoxLayout()
-        self.button_layout.setSpacing(40)
+        self.button_layout = QVBoxLayout()
+        self.button_layout.setSpacing(30)
+
 
         # Login-Button
-        self.login_button = QPushButton("Anmelden", self)
-        self.login_button.setFixedSize(140, 60)
+        self.login_button = QPushButton("Anmelden")
+        self.login_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.login_button.clicked.connect(self.handle_login)
-        self.login_button.setStyleSheet("""
-            font-size: 16px;
-            background-color: #0078d7;
-            color: white;
-            padding: 12px;
-            border-radius: 10px;
-            min-width: 140px;
-            }
-            QPushButton:hover {
-                background-color: #005a9e;
-            }
-        """)
+        self.login_button.setStyleSheet(loginbuttonstyle)
+
+        self.register_prompt_btn = QPushButton("Noch  kein Konto? Jetzt registrieren")
+        self.register_prompt_btn.setStyleSheet(registerpromptstyle)
+        self.register_prompt_btn.clicked.connect(self.show_registration_form)
+        # Registrieren-Button
+        self.register_button = QPushButton("Registrieren")
+        self.register_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.register_button.clicked.connect(self.handle_register)
+        self.register_button.setStyleSheet(loginbuttonstyle)
+        self.register_button.hide()
 
         self.button_layout.addWidget(self.login_button)
-        self.button_layout.setContentsMargins(0, 40, 0, 20)
-        self.grid_layout.addLayout(self.button_layout)
-
-        self.register_prompt_btn = QPushButton("Noch  kein Konto? Jetzt registrieren", self)
-        self.register_prompt_btn.setStyleSheet("""
-            QPushButton {
-                color: #0078d7;
-                font-size: 16px; 
-                cursor: pointer; 
-                border: none;
-                background-color : transparent;
-            }
-                """)
-        self.register_prompt_btn.clicked.connect(self.show_registration_form)
-        self.grid_layout.addWidget(self.register_prompt_btn)
-
-        # Registrieren-Button
-        self.register_button = QPushButton("Registrieren", self)
-        self.register_button.setFixedSize(140, 60)
-        self.register_button.clicked.connect(self.handle_register)
-        self.register_button.setStyleSheet("""
-                    font-size: 14px;
-                    background-color: #0078d7;
-                    color: white;
-                    padding: 12px;
-                    border-radius: 10px;
-                    min-width: 140px;
-                    }
-                    QPushButton:hover {
-                       background-color: #005a9e;
-                    }
-
-                """)
-        self.register_button.hide()
+        self.button_layout.addWidget(self.register_prompt_btn)
         self.button_layout.addWidget(self.register_button)
+        self.main_layout.addLayout(self.button_layout)
+
 
     def show_registration_form(self,event):
         self.title.setText("Registrieren Sie sich")
-
-        #self.grid_layout.removeWidget(self.password_input)
-        #self.grid_layout.removeWidget(self.password_label)
 
         if not hasattr(self, "email_input"):
             self.email_label = QLabel("Email:")
             self.email_input = QLineEdit()
             self.email_input.setPlaceholderText("E-Mail-Adresse")
-            self.email_input.setFixedWidth(600)
             self.form_layout.insertRow(1, self.email_label, self.email_input)  # 2te Position
 
             if not hasattr(self, "confirm_passwort_input"):
@@ -182,7 +134,6 @@ class LoginRegisterPage(QMainWindow):
                 self.confirm_password_input = QLineEdit()
                 self.confirm_password_input.setEchoMode(QLineEdit.Password)
                 self.confirm_password_input.setPlaceholderText("Passwort bestätigen")
-                self.confirm_password_input.setFixedWidth(600)
                 self.form_layout.addRow(self.confirm_password_label, self.confirm_password_input)
 
         self.login_button.hide()

@@ -1,3 +1,5 @@
+from PyQt5.QtWidgets import QPushButton
+
 style_box = """
 QComboBox {
     border: 2px solid #60a698;
@@ -222,5 +224,109 @@ back_button_style = """
     }
 """
 
+choose_button_style = """
+QPushButton {
+    font-size: 16px;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    color: white;
+    background-color: #007bff;
+}
+QPushButton:hover {
+    background-color: #00bcff;
+ 
+}
+"""
 
+Qlist_style = """
+QListWidget{
+ font-size: 24px; 
+}
+
+"""
+city_button_style = """
+    QPushButton {
+        border: 2px solid black;
+        border-radius: 8px;
+        background-color: white;
+        color: black;
+        font-size: 14px;
+        padding: 5px;
+    }
+    QPushButton:hover {
+        border: 2px solid #007bff;
+        background-color: #e6f2ff;
+    }
+    QPushButton:checked {
+        border: 2px solid blue;
+        background-color: lightblue;
+        color: white;
+    }
+"""
+loginmainstyle = """
+    QMainWindow {background-color: #f0f5f9; }
+            QPushButton {
+                font-size: 16px;
+                background-color: #0078d7;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #005a9e;
+            }
+            QLineEdit {
+                font-size: 16px;
+                padding: 12px;
+                border: 1px solid #a0a0a0;
+                border-radius: 5px;
+            }
+            QLabel {
+                font-size: 18px; 
+                color: #333; 
+    }
+"""
+loginlabelstyle = """
+    Qlabel {
+        font-size: 16px;
+        color: #333;
+    }
+"""
+
+loginbuttonstyle = """
+    QPushButton {
+        font-size: 18px;
+        background-color: #0078d7;
+        color: white;
+        padding: 12px;
+        border-radius: 8px;
+    }
+    QPushButton:hover {
+        background-color: #005a9e;
+    }
+"""
+logintitlestyle = """
+    QLabel {
+        font-size: 20px;
+        font-weight: bold;
+        color: #0078d7;
+    }
+"""
+loginimagestyle="""
+    QLabel{
+        border:none;
+        margin: 0 auto;
+        
+    }
+
+"""
+registerpromptstyle="""
+    QPushButton {
+        color: #0078d7;
+        font-size: 16px; 
+        cursor: pointer; 
+        border: none;
+        background-color : transparent;
+    }
+"""
 
