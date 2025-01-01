@@ -11,6 +11,9 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt,QSize
 from styles import *
 from database_action import *
+from user_info import UserInfoWindow
+
+
 
 
 class VoyageApp(QMainWindow):
@@ -255,20 +258,23 @@ class VoyageApp(QMainWindow):
         self.result_page = QWidget()
         self.cabin_page = QWidget()
         self.payment_page = QWidget()
+        self.user_profil = UserInfoWindow()
 
         self.stacked_widget.addWidget(self.selection_page)
         self.stacked_widget.addWidget(self.result_page)
         self.stacked_widget.addWidget(self.cabin_page)
         self.stacked_widget.addWidget(self.payment_page)
-        self.stacked_widget.setCurrentWidget(self.selection_page)
-        #main_layout.addWidget(self.stacked_widget)
+        self.stacked_widget.addWidget(self.user_profil)
         self.stacked_widget.setCurrentWidget(self.selection_page)
 
         self.menu_selection_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.selection_page))
         self.menu_result_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.result_page))
         self.menu_cabins_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.cabin_page))
         self.menu_payment_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.payment_page))
-
+        self.header_user_logo_btn.clicked.connect(lambda: [
+            self.on_user_logo_clicked(),
+            self.stacked_widget.setCurrentWidget(self.user_profil)
+        ])
 
         ##PAGE SELECTION
 
@@ -481,6 +487,8 @@ class VoyageApp(QMainWindow):
         container.setLayout(main_layout)
         self.setCentralWidget(container)
 
+
+
     def get_filtered_results(self):
 
         # Obtenir les valeurs des filtres
@@ -640,6 +648,62 @@ class VoyageApp(QMainWindow):
             child = layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
+
+    def on_user_logo_clicked(self):
+        """
+        Méthode appelée lors du clic sur le bouton utilisateur.
+        Met à jour les informations utilisateur et affiche la page user_profil.
+        """
+        try:
+            self.update_user_profil_page()  # Met à jour la page utilisateur
+            self.stacked_widget.setCurrentWidget(self.user_profil)  # Affiche la page utilisateur
+        except Exception as e:
+            QMessageBox.critical(self, "Erreur", f"Une erreur est survenue : {e}")
+
+    def update_user_profil_page(self):
+        """
+        Met à jour les informations utilisateur sur la page user_profil.
+        """
+        user_data = self.get_user_info()  # Récupère les informations utilisateur
+        if user_data:
+            self.user_profil.update_user_info(user_data)  # Met à jour les labels de la page user_profil
+        else:
+            QMessageBox.warning(self, "Avertissement", "Impossible de récupérer les informations utilisateur.")
+
+    def get_user_info(self):
+        """
+        Récupérer les informations utilisateur depuis la base de données.
+        Adaptez cette méthode en fonction de la structure de votre base de données.
+        """
+        try:
+            username = self.header_user_name_edit.text()
+            cursor.execute("SELECT username, email, kontostand FROM User WHERE username = ?", (username,))
+            user_row = cursor.fetchone()
+            if user_row:
+                return {
+                    "username": user_row[0],
+                    "email": user_row[1],
+                    "kontostand": user_row[2],
+                }
+            else:
+                return None
+        except Exception as e:
+            QMessageBox.critical(self, "Erreur", f"Impossible de récupérer les informations utilisateur : {e}")
+            return None
+
+    def show_user_info(self):
+        """
+        Afficher la fenêtre UserInfoWindow avec les détails de l'utilisateur.
+        """
+        user_data = self.get_user_info()
+        if not user_data:
+            QMessageBox.warning(self, "Avertissement", "Impossible de récupérer les informations utilisateur.")
+            return
+
+        if not self.user_info_window or not self.user_info_window.isVisible():
+            self.user_info_window = UserInfoWindow(user_data)
+            self.user_info_window.show()
+
 
     def on_search_button_clicked(self):
         filtered_results = self.get_filtered_results()
