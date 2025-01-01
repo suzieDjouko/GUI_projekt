@@ -1,16 +1,24 @@
 import sys
-import os
-import pandas as pd
+
 from PyQt5 import QtCore
+from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QLabel, QMessageBox,
-     QScrollArea, QGridLayout, QComboBox, QSpinBox, QSizePolicy, QLineEdit,
-    QSpacerItem, QStackedWidget, QFrame, QListWidget, QListWidgetItem
+    QApplication, QMainWindow, QHBoxLayout,
+    QScrollArea, QComboBox, QSpinBox, QSizePolicy, QLineEdit,
+    QSpacerItem, QStackedWidget, QFrame, QListWidget, QListWidgetItem, QCalendarWidget, QDateEdit
 )
-from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtCore import Qt,QSize
+from PyQt5.QtGui import QTextCharFormat, QColor
+
+
 from styles import *
 from database_action import *
+from functionen import *
+
+from payment import PaymentProcessor
+
+from user_info import UserInfoWindow
+
+
 
 
 class VoyageApp(QMainWindow):
@@ -28,9 +36,11 @@ class VoyageApp(QMainWindow):
         # Définir les dimensions minimales pour éviter que la fenêtre ne devienne trop petite
         self.setMinimumSize(800, 600)
 
+
+
         # Charger les données Excel
         self.data_file = "../Schiffsreisen_cleaned.xlsx"  # Remplacez par le chemin correct
-        self.load_data()
+        self.df = load_data(self.data_file, self)
 
         # Définir les chemins des dossiers
         self.schiffstyp_folder = "../images/Schiffstypen"  # Types de navires
@@ -41,60 +51,6 @@ class VoyageApp(QMainWindow):
         # Initialiser l'interface
         self.init_ui()
 
-    def load_data(self):
-        """Charger les données depuis le fichier Excel, vérifier les colonnes et nettoyer les données."""
-        try:
-            # Charger les données
-            self.df = pd.read_excel(self.data_file)
-
-            # Vérifier la présence des colonnes nécessaires
-            expected_columns = [
-                "Meerart","Übernachtungen", "Besuchte_Städte", "Schiffstyp",
-                "Innenkabine", "Aussenkabine", "Balkonkabine",
-                "Luxuskabine1", "Luxuskabine2", "Luxuskabine3"
-            ]
-            missing_columns = [col for col in expected_columns if col not in self.df.columns]
-            if missing_columns:
-                self.show_error(f"Colonnes manquantes : {', '.join(missing_columns)}")
-                return
-
-            # Supprimer les lignes entièrement vides
-            self.df = self.df.dropna(how='all')
-
-            # Remplacer "nicht vorhanden" par NaN dans les colonnes de cabines
-            cabine_columns = [
-                "Innenkabine", "Aussenkabine", "Balkonkabine",
-                "Luxuskabine1", "Luxuskabine2", "Luxuskabine3"
-            ]
-            for col in cabine_columns:
-                if col in self.df.columns:
-                    self.df[col] = self.df[col].replace("nicht vorhanden", 0)
-
-                    # Conversion des colonnes en types appropriés
-            type_mappings = {
-                "Übernachtungen": int,
-                "Meerart": str,
-                "Besuchte_Städte": str,
-                "Schiffstyp": str,
-                "Innenkabine": int,
-                "Aussenkabine": int,
-                "Balkonkabine": int,
-                "Luxuskabine1": int,
-                "Luxuskabine2": int,
-                "Luxuskabine3": int,
-            }
-            for col, dtype in type_mappings.items():
-                if col in self.df.columns:
-                    # Convertir les colonnes numériques en entier
-                    if dtype == int:
-                        self.df[col] = pd.to_numeric(self.df[col], errors='coerce').fillna(0).astype(int)
-                    else:
-                        self.df[col] = self.df[col].astype(dtype)
-
-        except FileNotFoundError:
-            self.show_error(f"Fichier introuvable : {self.data_file}")
-        except Exception as e:
-            self.show_error(f"Impossible de charger les données : {e}")
 
     def init_ui(self):
         self.setStyleSheet(
@@ -154,12 +110,15 @@ class VoyageApp(QMainWindow):
             }
             """
         )
-        # self.header_user_logo_btn.clicked.connect(self.handle_modify_profile)
+        self.header_user_logo_btn.clicked.connect(lambda: [
+            self.on_user_logo_clicked(),
+            self.stacked_widget.setCurrentWidget(self.user_profil)
+        ])
         self.header_user_name_edit = QLineEdit()
         self.header_user_name_edit.setText("Username:")
         self.header_user_name_edit.setFixedHeight(40)
         #self.header_user_name_edit.setStyleSheet("QLineEdit {font-size: 24px; border: none; background: transparent;}")
-        self.header_user_name_edit.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.header_user_name_edit.setFocusPolicy(Qt.NoFocus)
         self.header_user_name_edit.setReadOnly(True)
         self.header_user_name_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
@@ -182,7 +141,7 @@ class VoyageApp(QMainWindow):
         self.kontostand_amont_edit.setStyleSheet("QLineEdit {font-size: 20px;}")
         self.kontostand_amont_edit.setText("0.00 €")
         self.kontostand_amont_edit.setFixedHeight(40)
-        self.kontostand_amont_edit.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.kontostand_amont_edit.setFocusPolicy(Qt.NoFocus)
         self.kontostand_amont_edit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.header_kontostand_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.kontostand_amont_edit.setMinimumWidth(120)
@@ -193,7 +152,7 @@ class VoyageApp(QMainWindow):
         self.kontostand_amont_logo_label.setPixmap(self.kontostand_amont_logo)
         self.kontostand_amont_logo_label.setScaledContents(True)
         # add Kontostand
-        self.header_kontostand_layout.addWidget(self.header_kontostand_label, alignment=QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.header_kontostand_layout.addWidget(self.header_kontostand_label, alignment=Qt.AlignmentFlag.AlignVCenter)
         self.header_kontostand_layout.addWidget(self.kontostand_amont_edit)
         self.header_kontostand_layout.addWidget(self.kontostand_amont_logo_label)
         # LOGOUT
@@ -217,7 +176,7 @@ class VoyageApp(QMainWindow):
         self.header_logo_logout_button.clicked.connect(self.close)
 
         self.headerLayout.setSpacing(30)
-        self.headerLayout.addWidget(self.header_logo_label, alignment=QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.headerLayout.addWidget(self.header_logo_label, alignment=Qt.AlignmentFlag.AlignVCenter)
         self.headerLayout.addItem(spacer)
         self.headerLayout.addLayout(self.header_user_layout)
         self.headerLayout.addItem(spacer)
@@ -229,6 +188,28 @@ class VoyageApp(QMainWindow):
 
 
         # MENU
+
+        # Créez les pages
+        self.stacked_widget = QStackedWidget(self)
+
+        self.selection_page = QWidget()
+        self.result_page = QWidget()
+        self.cabin_page = QWidget()
+        self.payment_page = QWidget()
+        self.reisezeit_page = QWidget()
+        self.user_profil = UserInfoWindow()
+        self.user_profil.return_callback = lambda: self.stacked_widget.setCurrentWidget(self.selection_page)
+
+        self.stacked_widget.addWidget(self.selection_page)
+        self.stacked_widget.addWidget(self.result_page)
+        self.stacked_widget.addWidget(self.cabin_page)
+        self.stacked_widget.addWidget(self.reisezeit_page)
+        self.stacked_widget.addWidget(self.payment_page)
+        self.stacked_widget.addWidget(self.user_profil)
+
+
+        self.stacked_widget.setCurrentWidget(self.selection_page)
+
         self.menuLayout = QHBoxLayout()
         self.menuLayout.setContentsMargins(0, 0, 0, 30)
         self.menuLayout.setSpacing(1)
@@ -236,37 +217,25 @@ class VoyageApp(QMainWindow):
         self.menu_selection_pushbutton = QPushButton("Selection")
         self.menu_result_pushbutton = QPushButton("Result")
         self.menu_cabins_pushbutton = QPushButton("Cabins")
+        self.menu_reisezeit_pushbutton = QPushButton("Reisezeit")
         self.menu_payment_pushbutton = QPushButton("Payment")
 
         menu_buttons = [
             self.menu_selection_pushbutton,
             self.menu_result_pushbutton,
             self.menu_cabins_pushbutton,
+            self.menu_reisezeit_pushbutton,
             self.menu_payment_pushbutton,
         ]
         for button in menu_buttons:
             button.setStyleSheet(menu_style)
             self.menuLayout.addWidget(button)
 
-        self.stacked_widget = QStackedWidget(self)
-
-        # Créez les pages
-        self.selection_page = QWidget()
-        self.result_page = QWidget()
-        self.cabin_page = QWidget()
-        self.payment_page = QWidget()
-
-        self.stacked_widget.addWidget(self.selection_page)
-        self.stacked_widget.addWidget(self.result_page)
-        self.stacked_widget.addWidget(self.cabin_page)
-        self.stacked_widget.addWidget(self.payment_page)
-        self.stacked_widget.setCurrentWidget(self.selection_page)
-        #main_layout.addWidget(self.stacked_widget)
-        self.stacked_widget.setCurrentWidget(self.selection_page)
 
         self.menu_selection_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.selection_page))
         self.menu_result_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.result_page))
         self.menu_cabins_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.cabin_page))
+        self.menu_reisezeit_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.reisezeit_page))
         self.menu_payment_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.payment_page))
 
 
@@ -397,6 +366,103 @@ class VoyageApp(QMainWindow):
         self.cabin_page.setLayout(cabin_page_layout)
 
 
+        #PAGE SELECTION DE DATE
+        self.reisezeit_layout = QVBoxLayout()
+
+        # Détails du voyage
+        self.reisezeit_trip_details_label = QLabel()
+        self.reisezeit_trip_details_label.setStyleSheet("font-size: 20px; margin-bottom: 20px;")
+        self.reisezeit_city_scroll_area = QScrollArea()
+        self.reisezeit_city_scroll_area.setWidgetResizable(True)
+
+        self.reisezeit_ship_image_label = QLabel()
+        self.reisezeit_ship_image_label.setFixedSize(300, 250)
+        self.reisezeit_ship_image_label.setAlignment(Qt.AlignCenter)
+
+        self.reisezeit_cabin_image_label = QLabel()
+        self.reisezeit_cabin_image_label.setFixedSize(300, 250)
+        self.reisezeit_cabin_image_label.setAlignment(Qt.AlignCenter)
+
+        self.reisezeit_layout = QVBoxLayout()
+        self.reisezeit_layout.addWidget(self.reisezeit_trip_details_label)
+        self.reisezeit_layout.addWidget(QLabel("Cities:"))
+        self.reisezeit_layout.addWidget(self.reisezeit_city_scroll_area)
+        self.reisezeit_ship_cabin_layout = QHBoxLayout()
+
+
+        ship_layout = QVBoxLayout()
+        ship_layout.addWidget(QLabel("Ship Type:"))
+        ship_layout.addWidget(self.reisezeit_ship_image_label)
+        self.reisezeit_ship_cabin_layout.addLayout(ship_layout)
+
+        cabin_layout = QVBoxLayout()
+        cabin_layout.addWidget(QLabel("Cabin:"))
+        cabin_layout.addWidget(self.reisezeit_cabin_image_label)
+        self.reisezeit_ship_cabin_layout.addLayout(cabin_layout)
+
+        self.reisezeit_layout.addLayout(self.reisezeit_ship_cabin_layout)
+
+        # Sélection des dates
+        self.reisezeit_layout.addWidget(QLabel("Departure Date:"))
+        self.departure_date_edit = QDateEdit()
+        self.departure_date_edit.setCalendarPopup(True)
+        self.departure_date_edit.setMinimumDate(QDate(2025, 5, 1))
+        self.departure_date_edit.setMaximumDate(QDate(2025, 10, 31))
+        self.departure_date_edit.dateChanged.connect(self.on_departure_date_changed)
+        self.departure_date_edit.setStyleSheet(Datestyle)
+        self.reisezeit_layout.addWidget(self.departure_date_edit)
+
+        self.reisezeit_layout.addWidget(QLabel("Return Date:"))
+        self.return_date_edit = QDateEdit()
+        self.return_date_edit.setCalendarPopup(True)
+        self.return_date_edit.setMinimumDate(QDate(2025, 5, 2))
+        self.return_date_edit.setMaximumDate(QDate(2025, 10, 31))
+        self.reisezeit_layout.addWidget(self.return_date_edit)
+
+        spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.reisezeit_layout.addItem(spacer)
+
+        self.reisezeit_cancel = QPushButton("Cancel")
+        self.reisezeit_cancel.setFixedSize(150, 40)
+        self.reisezeit_cancel.setStyleSheet(cancelstyle)
+        self.reisezeit_layout.addWidget(self.reisezeit_cancel)
+        self.reisezeit_layout.addWidget(self.reisezeit_cancel, alignment=Qt.AlignRight)
+        self.reisezeit_cancel.clicked.connect(lambda : self.stacked_widget.setCurrentWidget(self.selection_page))
+
+        # Ajouter les boutons en bas de la page
+        self.reisezeit_button_layout = QHBoxLayout()
+        self.reisezeit_button_layout.setContentsMargins(20, 20, 20, 20)
+        self.reisezeit_button_layout.setSpacing(20)
+
+        self.reisezeit_return_button = QPushButton("Return")
+        self.reisezeit_return_button.setStyleSheet(back_button_style)
+        self.reisezeit_return_button.clicked.connect(self.on_back_to_cabin_clicked)
+        self.return_date_edit.setStyleSheet(Datestyle)
+
+
+        self.reisezeit_confirm_button = QPushButton("Confirm")
+        self.reisezeit_confirm_button.setStyleSheet("""
+                QPushButton {
+                    background-color: green;
+                    color: white;
+                    font-size: 16px;
+                    padding: 10px;
+                    border-radius: 8px;
+                }
+                QPushButton:hover {
+                    background-color: darkgreen;
+                }
+            """)
+        self.reisezeit_confirm_button.clicked.connect(self.on_confirm_date_selection)
+
+        self.reisezeit_button_layout.addWidget(self.reisezeit_return_button)
+        self.reisezeit_button_layout.addWidget(self.reisezeit_confirm_button)
+        self.reisezeit_layout.addLayout(self.reisezeit_button_layout)
+
+        self.reisezeit_page.setLayout(self.reisezeit_layout)
+
+
+
 
         #PAGE PAYEMENT
         self.payment_layout = QVBoxLayout()
@@ -441,7 +507,7 @@ class VoyageApp(QMainWindow):
         self.payment_back_button = QPushButton("Return")
         self.payment_back_button.setStyleSheet(back_button_style)
         self.payment_back_button.clicked.connect(
-            lambda: self.stacked_widget.setCurrentWidget(self.cabin_page))  # Navigate back
+            lambda: self.stacked_widget.setCurrentWidget(self.reisezeit_page))  # Navigate back
         self.payment_buttons_layout.addWidget(self.payment_back_button)
 
         # Proceed to Payment Button
@@ -481,77 +547,168 @@ class VoyageApp(QMainWindow):
         container.setLayout(main_layout)
         self.setCentralWidget(container)
 
+    def update_reisezeit_page(self, row_data):
+        """
+        Met à jour les éléments spécifiques de la page Reisezeit.
+        """
+        try:
+            # Vérifiez que city_scroll_area est correctement configuré
+            if self.reisezeit_city_scroll_area is None:
+                self.reisezeit_city_scroll_area = QScrollArea()
+
+            # Mettre à jour les détails du voyage
+            trip_details = (
+                f"<b>Trip number:</b> {row_data['Reisenummer']}<br>"
+                f"<b>Sea:</b> {row_data['Meerart']}<br>"
+                f"<b>Number of nights:</b> {row_data['Übernachtungen']}<br>"
+                f"<b>Cities:</b> {row_data['Besuchte_Städte']}<br>"
+                f"<b>Ship type:</b> {row_data['Schiffstyp']}<br>"
+                f"<b>Selected Cabin:</b> {self.selected_cabin_type}<br>"
+                f"<b>Price:</b> {self.selected_cabin_price} €"
+            )
+            self.reisezeit_trip_details_label.setText(trip_details)
+            self.apply_date_restrictions(row_data['Schiffstyp'])
+
+            # Vider et mettre à jour les images des villes
+            city_layout = QHBoxLayout()
+            for city in row_data['Besuchte_Städte'].split(','):
+                city = city.strip()
+                city_label = QLabel()
+                image_path = f"../images/Hafenstaedte/{city}.jpg"
+                if os.path.exists(image_path):
+                    city_label.setPixmap(QPixmap(image_path).scaled(150, 100, Qt.KeepAspectRatio))
+                else:
+                    city_label.setText(f"No image for {city}")
+                city_label.setAlignment(Qt.AlignCenter)
+                city_layout.addWidget(city_label)
+            city_widget = QWidget()
+            city_widget.setLayout(city_layout)
+            self.reisezeit_city_scroll_area.setWidget(city_widget)
+            self.reisezeit_city_scroll_area.setFixedHeight(150)
+
+            # Mettre à jour l'image du type de bateau
+            ship_image_path = f"../images/Schiffstypen/Schiffstyp {row_data['Schiffstyp']}.jpg"
+            if os.path.exists(ship_image_path):
+                self.reisezeit_ship_image_label.setPixmap(QPixmap(ship_image_path).scaled(300, 250, Qt.KeepAspectRatio))
+            else:
+                self.reisezeit_ship_image_label.setText("No image available")
+
+            # Mettre à jour l'image de la cabine sélectionnée
+            cabin_image_path = get_cabin_image_path(self.selected_cabin_type)
+            if cabin_image_path:
+                self.reisezeit_cabin_image_label.setPixmap(
+                    QPixmap(cabin_image_path).scaled(300, 250, Qt.KeepAspectRatio))
+            else:
+                self.reisezeit_cabin_image_label.setText("No cabin selected")
+        except Exception as e:
+            print(f"Erreur lors de la mise à jour de la page Reisezeit : {e}")
+
+    def on_departure_date_changed(self, date):
+
+        print(f"Date de départ sélectionnée : {date.toString(Qt.ISODate)}")
+        # Vous pouvez ajouter ici la logique que vous souhaitez appliquer
+        # par exemple, ajuster la date de retour pour qu'elle soit après la date de départ
+        if self.return_date_edit.date() < date:
+            # Si la date de retour est avant la date de départ, la mettre à jour
+            self.return_date_edit.setDate(
+                date.addDays(1))  # Exemple : la date de retour doit être au moins 1 jour après la date de départ
+
+    def apply_date_restrictions(self, ship_type):
+        # Dictionnaire des jours de départ par type de navire
+        ship_departure_days = {
+            'A': [1],  # Monday
+            'B': [2],  # Tuesday
+            'C': [3],  # Wednesday
+            'D': [4],  # Thursday
+            'E': [5],  # Friday
+            'F': [6],  # Saturday
+            'G': [7],  # Sunday
+            'H': [7],  # Sunday
+            'I': [7],  # Sunday
+            'J': [1, 3],  # First Monday and Wednesday of each month
+            'K': [1, 3],  # First Monday and Wednesday of each month
+            'X': [1],  # First day of each month
+        }
+
+        valid_days = ship_departure_days.get(ship_type, [])
+        disabled_format = QTextCharFormat()
+        disabled_format.setForeground(QColor(200, 200, 200))  # Gris pour les dates invalides
+
+        enabled_format = QTextCharFormat()
+        enabled_format.setForeground(QColor(0, 0, 0))  # Noir pour les dates valides
+
+        # Appliquer les restrictions sur le calendrier
+        current_date = QDate(2025, 5, 1)
+        while current_date <= QDate(2025, 10, 31):
+            if current_date.dayOfWeek() not in valid_days:
+                self.departure_date_edit.calendarWidget().setDateTextFormat(current_date, disabled_format)
+            else:
+                self.departure_date_edit.calendarWidget().setDateTextFormat(current_date, enabled_format)
+            current_date = current_date.addDays(1)
     def get_filtered_results(self):
 
-        # Obtenir les valeurs des filtres
-        df_filtered = self.df.copy()
+            # Obtenir les valeurs des filtres
+            df_filtered = self.df.copy()
 
-        # Filtrer par mer
-        selected_sea = self.sea_combo.currentText()
+            # Filtrer par mer
+            selected_sea = self.sea_combo.currentText()
 
-        if selected_sea != "All":
-            df_filtered = self.filter_by_sea(selected_sea, df_filtered)
+            if selected_sea != "All":
+                df_filtered = self.filter_by_sea(selected_sea, df_filtered)
 
-        # Filtrer par nuit si défini
-        selected_night = self.nights_spin.value()
-        if selected_night != 0:
-            df_filtered = self.filter_by_night(selected_night, df_filtered)
-        #si au moins une ville dans la colone 'Besuchte Stadte
+            # Filtrer par nuit si défini
+            selected_night = self.nights_spin.value()
+            if selected_night != 0:
+                df_filtered = self.filter_by_night(selected_night, df_filtered)
+            #si au moins une ville dans la colone 'Besuchte Stadte
 
-        #fiter bei Ship
-        selected_ship = self.ship_combo.currentText()
-        if selected_ship and selected_ship != "Choose a Ship":
-            df_filtered = self.filter_by_ship(selected_ship, df_filtered)
+            #fiter bei
+            self.selected_ship = self.ship_combo.currentText()
+            if self.selected_ship and self.selected_ship != "Choose a Ship":
+                df_filtered = self.filter_by_ship(self.selected_ship, df_filtered)
 
-        if self.selected_cities:
-            def match_cities(cities):
-                if not isinstance(cities, str):  # Sécurité contre les valeurs non textuelles
-                    return False
-                return any(city.strip() in self.selected_cities for city in cities.split(","))
+            if self.selected_cities:
+                def match_cities(cities):
+                    if not isinstance(cities, str):  # Sécurité contre les valeurs non textuelles
+                        return False
+                    return any(city.strip() in self.selected_cities for city in cities.split(","))
 
-            df_filtered = df_filtered[df_filtered["Besuchte_Städte"].apply(match_cities)]
+                df_filtered = df_filtered[df_filtered["Besuchte_Städte"].apply(match_cities)]
 
-        print(f"Filtrage par Meerart : {selected_sea}")
-        print(f"Filtrage par Übernachtungen : {selected_night}")
-        print(f"Villes sélectionnées : {self.selected_cities}")
+            print(f"Filtrage par Meerart : {selected_sea}")
+            print(f"Filtrage par Übernachtungen : {selected_night}")
+            print(f"Villes sélectionnées : {self.selected_cities}")
 
-        return df_filtered
+            return df_filtered
 
     def process_payment(self):
         try:
             selected_method = self.payment_methods_combo.currentText()
             total_price_text = self.total_price_label.text().strip()
-            print(f"Total Price Label Text: {total_price_text}")
 
             if "Total Price: €" in total_price_text:
-                total_price = int(total_price_text.replace("Total Price: €", "").strip())
+                total_price = str(total_price_text.replace("Total Price: €", "").strip())
             else:
-                QMessageBox.warning(self, "Error", "Unable to retrieve the total price.")
+                self.show_error("Unable to retrieve the total price.")
                 return
 
-            print(f"Parsed Total Price: {total_price} €")
-
-            username = self.header_user_name_edit.text()
-            user_balance = get_user_balance(username)
-            print(f"User balance: {user_balance} €")
-
-            if user_balance is None:
-                QMessageBox.warning(self, "Error", "User not found.")
-                return
-
-            if total_price > user_balance:
-                QMessageBox.warning(self, "Error", "Insufficient balance.")
-                return
-
-            # Deduct from balance and update the database
-            new_balance = user_balance - total_price
-            update_user_balance(username, new_balance)
-            self.kontostand_amont_edit.setText(f"{new_balance} €")
-
-            QMessageBox.information(
-                self, "Payment Successful",
-                f"Your payment of {total_price} € using {selected_method} was successful."
+            # Créer une instance de PaymentProcessor
+            payment_processor = PaymentProcessor(
+                username = self.header_user_name_edit.text(),
+                total_price = total_price,
+                payment_method = selected_method,
+                get_user_balance = get_user_balance,  # Assure-toi que get_user_balance est une fonction valide
+                update_user_balance = update_user_balance  # Idem pour update_user_balance
             )
+
+            # Appeler la méthode process_payment() pour traiter le paiement
+            new_balance = payment_processor.process_payment()
+
+            # Si le paiement a réussi, mettre à jour l'interface avec le nouveau solde
+            if new_balance is not None:
+                self.kontostand_amont_edit.setText(f"{new_balance} €")
+
+
         except Exception as e:
             print(f"Error in process_payment: {e}")
 
@@ -570,7 +727,7 @@ class VoyageApp(QMainWindow):
             item_layout.setContentsMargins(5, 5, 5, 5)
 
             # Format trip details as a single string
-            visited_cities = row_data.get("Besuchte_Städte", "Unknown")
+            visited_cities = row_data.get("Besuchte_Städte")
             trip_details_text = (
                 f"Trip {row_data['Reisenummer']}: {row_data['Meerart']}, "
                 f"{row_data['Übernachtungen']} nights,  cities: {visited_cities}"
@@ -615,31 +772,49 @@ class VoyageApp(QMainWindow):
 
         self.result_label.setText("Results found:")
 
-    def on_cabin_selected(self, cabin_type, cabin_price):
-        """Gère la sélection d'une cabine par l'utilisateur."""
-        QMessageBox.information(
-            self,
-            "Cabine Sélectionnée",
-            f"Vous avez sélectionné la cabine {cabin_type} pour {cabin_price} €."
-        )
-        # Naviguer vers la page de paiement ou effectuer d'autres actions
-        self.stacked_widget.setCurrentWidget(self.payment_page)
-        self.update_payment_page(cabin_type, cabin_price)
+   # def on_cabin_selected(self, cabin_type, cabin_price,row_data):
+    #    self.selected_cabin_type = cabin_type
+     #   print(f"Cabin selected: {self.selected_cabin_type}")
+      #  self.update_payment_page(cabin_type, cabin_price)
+       # self.update_reisezeit_page(row_data)
+        #self.stacked_widget.setCurrentWidget(self.reisezeit_page)
+    def on_pay_clicked(self, cabin_type, cabin_price, row_data):
+        """
+        Méthode appelée lorsque le bouton 'Pay' est cliqué.
+        """
+        try:
+            # Stocker la cabine sélectionnée et son prix
+            self.selected_cabin_type = cabin_type
+            self.selected_cabin_price = cabin_price
 
-    def reset_cabin_page(self):
-        """Réinitialiser la page des cabines."""
-        self.clear_layout(self.cabin_layout)
-        self.cabin_summary_label.clear()
+            # Mettre à jour la page Reisezeit
+            self.update_reisezeit_page(row_data)
+
+            # Naviguer vers la page Reisezeit
+            self.stacked_widget.setCurrentWidget(self.reisezeit_page)
+
+        except Exception as e:
+            print(f"Erreur lors de la mise à jour de la page Reisezeit : {e}")
+
+    def on_confirm_date_selection(self):
+        self.stacked_widget.setCurrentWidget(self.payment_page)  # Rediriger vers la page de paiement
 
     def on_back_to_results_clicked(self):
         self.stacked_widget.setCurrentWidget(self.result_page)  # Naviguer vers la page des résultats
 
+    def on_back_to_cabin_clicked(self):
+        self.selected_cabin_type = None
+        self.stacked_widget.setCurrentWidget(self.cabin_page)
+
     def clear_layout(self, layout):
         """Supprime tous les widgets d'un layout."""
-        while layout.count():
-            child = layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
+        if layout is not None:  # Vérifie que le layout n'est pas None
+            while layout.count():  # Vérifie s'il contient des widgets
+                child = layout.takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater()
+        else:
+            print("Layout is None, nothing to clear.")
 
     def on_search_button_clicked(self):
         filtered_results = self.get_filtered_results()
@@ -650,18 +825,23 @@ class VoyageApp(QMainWindow):
         """Gère la sélection d'un voyage par l'utilisateur."""
         # Afficher un message de confirmation
         # Afficher les images des cabines pour ce voyage
-        self.clear_layout(self.cabin_layout)
-        summary = (
-            f"<b>Reise Nummer :</b> {row_data['Reisenummer']}<br>"
-            f"<b>Meerart :</b> {row_data['Meerart']}<br>"
-            f"<b>Nombre de nuits :</b> {row_data['Übernachtungen']}<br>"
-            f"<b>Schiffstyp :</b> {row_data['Schiffstyp']}"
+        #self.clear_layout(self.cabin_layout)
+        #self.update_user_choise(row_data)
+        self.selected_cabin_type = None
+
+        trip_details = (
+            f"<b>Trip number:</b> {row_data['Reisenummer']}<br>"
+            f"<b>Sea:</b> {row_data['Meerart']}<br>"
+            f"<b>Number of nights:</b> {row_data['Übernachtungen']}<br>"
+            f"<b>Cities:</b> {row_data['Besuchte_Städte']}<br>"
+            f"<b>Ship type:</b> {row_data['Schiffstyp']}"
         )
-        self.cabin_summary_label.setText(summary)
+        self.cabin_summary_label.setText(trip_details)
 
-        self.stacked_widget.setCurrentWidget(self.cabin_page)
 
+        self.display_selected_ship_image(row_data['Schiffstyp'])
         self.display_cabin_images(row_data)
+        self.stacked_widget.setCurrentWidget(self.cabin_page)
 
     def display_cabin_images(self, row_data):
         self.clear_layout(self.cabin_layout)
@@ -679,7 +859,7 @@ class VoyageApp(QMainWindow):
 
         for cabin_type, description in cabin_details.items():
             cabin_price = row_data.get(cabin_type, "not available")  # Retrieve cabin price or "not available"
-            image_path = self.get_cabin_image_path(cabin_type)  # Retrieve the image path for the cabin
+            image_path = get_cabin_image_path(cabin_type)  # Retrieve the image path for the cabin
 
             # Display cabin image and information
             cabin_layout = QHBoxLayout()
@@ -704,7 +884,7 @@ class VoyageApp(QMainWindow):
             info_layout.addWidget(characteristics_label)
 
             # Display price
-            if  cabin_price == 0:
+            if cabin_price == 0:
                 # Price not available
                 price_label = QLabel("Price: Not Available")
                 price_label.setStyleSheet("font-size: 20px; color: gray;")
@@ -725,23 +905,25 @@ class VoyageApp(QMainWindow):
                     info_layout.addWidget(price_label)
 
             # Add "Pay" button
-            choose_button = QPushButton("Pay")
-            choose_button.setFixedSize(120, 50)
+            pay_button = QPushButton("Pay")
+            pay_button.setFixedSize(120, 50)
             if cabin_price == 0 or cabin_price > user_balance:
-                choose_button.setEnabled(False)
-                choose_button.setStyleSheet(
+                pay_button.setEnabled(False)
+                pay_button.setStyleSheet(
                     "background-color: lightgray; color: gray; border-radius: 8px; padding: 10px; font-size:16px"
                 )
                 if cabin_price == 0:
-                    choose_button.setToolTip("Price not available")
+                    pay_button.setToolTip("Price not available")
                 else:
-                    choose_button.setToolTip("Insufficient balance")
+                    pay_button.setToolTip("Insufficient balance")
             else:
-                choose_button.setStyleSheet(
+                pay_button.setStyleSheet(
                     "background-color: #007bff; color: white; border-radius: 8px; padding: 10px; font-size:16px"
                 )
-                choose_button.clicked.connect(lambda _, ct=cabin_type, cp=cabin_price: self.on_cabin_selected(ct, cp))
-            info_layout.addWidget(choose_button, alignment=Qt.AlignRight)
+                pay_button.clicked.connect(
+                    lambda _, ct=cabin_type, cp=cabin_price: self.on_pay_clicked(ct, cp, row_data)
+                )
+            info_layout.addWidget(pay_button, alignment=Qt.AlignRight)
 
             cabin_layout.addLayout(info_layout)
 
@@ -756,41 +938,25 @@ class VoyageApp(QMainWindow):
             separator.setFrameShadow(QFrame.Sunken)
             self.cabin_layout.addWidget(separator)
 
-    def get_cabin_image_path(self, cabin_type):
-        cabin_images= {
-            "Innenkabine":"../images/Kabinentypen/Innenkabine.JPG",
-            "Aussenkabine": "../images/Kabinentypen/Aussenkabine.JPG",
-            "Balkonkabine": "../images/Kabinentypen/Balkonkabine.JPG",
-            "Luxuskabine1": "../images/Kabinentypen/Luxuskabine Kategorie 1.jpg",
-            "Luxuskabine2": "../images/Kabinentypen/Luxuskabine Kategorie 2.jpg",
-            "Luxuskabine3": "../images/Kabinentypen/Luxuskabine Kategorie 3.jpg",
-        }
-        image_path = cabin_images.get(cabin_type)
-        if image_path and os.path.exists(image_path):
-            return image_path
-        else:
-            return None
-
-    #def on_cabin_selected(self, cabin_type, cabin_price):
-
-        # Switch to the payment page
-        #self.stacked_widget.setCurrentWidget(self.payment_page)
-
-        # Update payment page details (optional, based on your payment page design)
-        #self.update_payment_page(cabin_type, cabin_price)
-
     def update_payment_page(self, cabin_type, cabin_price):
         """
         Update payment page details with selected cabin and price.
         """
         # Update cabin details label
-        self.cabin_details_label.setText(
-            f"<b>Selected Cabin:</b> {cabin_type}<br>"
-            f"<b>Price:</b> {cabin_price} €"
-        )
+        try:
+            # Mettre à jour les détails de la cabine
+            self.cabin_details_label.setText(
+                f"<b>Selected Cabin:</b> {cabin_type}<br>"
+                f"<b>Price:</b> {self.selected_cabin_price} €"
 
-        # Update total price label
-        self.total_price_label.setText(f"Total Price: {cabin_price} €")
+                #f"<b>Price:</b> {cabin_price} €"
+            )
+
+            # Mettre à jour le prix total
+            self.total_price_label.setText(f"Total Price: {cabin_price} €")
+            print(f"Payment page updated for cabin: {cabin_type}, price: {cabin_price} €")
+        except Exception as e:
+            print(f"Error in update_payment_page: {e}")
 
     def load_ship_types(self):
         """Charger les types de navires dans la barre déroulante."""
@@ -894,7 +1060,6 @@ class VoyageApp(QMainWindow):
             # Actualiser les types de navires
             self.update_ship_types()
 
-
         except Exception as e:
             print(f"Erreur lors de la mise à jour des filtres : {e}")
 
@@ -926,11 +1091,9 @@ class VoyageApp(QMainWindow):
 
         # Réinitialiser la sélection des types de navires
         self.ship_combo.setCurrentIndex(0)
-        self.result_list.clear()
         self.ship_image_label.clear()  # Effacer l'image du navire sélectionné
 
-
-
+        self.result_list.clear()
 
     def show_error(self, message):
         QMessageBox.critical(self, "Erreur", message)
@@ -971,6 +1134,33 @@ class VoyageApp(QMainWindow):
             for ship_type in available_ships:
                 self.ship_combo.addItem(ship_type)
 
+    def show_user_info(self):
+        """
+        Afficher la fenêtre UserInfoWindow avec les détails de l'utilisateur.
+        """
+        get_user_info(self.header_user_name_edit)
+
+
+    def on_user_logo_clicked(self):
+        """
+        Méthode appelée lors du clic sur le bouton utilisateur.
+        Met à jour les informations utilisateur et affiche la page user_profil.
+        """
+        try:
+            self.update_user_profil_page()  # Met à jour la page utilisateur
+            self.stacked_widget.setCurrentWidget(self.user_profil)  # Affiche la page utilisateur
+        except Exception :
+            return None
+
+    def update_user_profil_page(self):
+        """
+        Met à jour les informations utilisateur sur la page user_profil.
+        """
+        user_data = get_user_info(self.header_user_name_edit)  # Récupère les informations utilisateur
+        if user_data:
+            self.user_profil.update_user_info(user_data)  # Met à jour les labels de la page user_profil
+        else:
+            return None
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

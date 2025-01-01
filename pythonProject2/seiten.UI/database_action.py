@@ -30,3 +30,24 @@ def update_user_balance(username, new_balance):
     except Exception as e:
         print(f"Erreur lors de la mise à jour du solde : {e}")
         raise
+
+def get_user_info(header_user_name_edit):
+        """
+        Récupérer les informations utilisateur depuis la base de données.
+        Adaptez cette méthode en fonction de la structure de votre base de données.
+        """
+        try:
+            username = header_user_name_edit.text()
+            cursor.execute("SELECT id,username, email, kontostand FROM User WHERE username = ?", (username,))
+            user_row = cursor.fetchone()
+            if user_row:
+                return {
+                    "id": user_row[0],
+                    "username": user_row[1],
+                    "email": user_row[2],
+                    "kontostand": user_row[3],
+                }
+            else:
+                return None
+        except Exception:
+            return None

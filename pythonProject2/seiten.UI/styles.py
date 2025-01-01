@@ -50,10 +50,16 @@ QSpinBox::up-button, QSpinBox::down-button {
     height: 16px;
 }
 
-QSpinBox::up-arrow, QSpinBox::down-arrow {
-    image: url('../icon/icons8-arrow-up-48.png');
+QSpinBox::up-arrow {
+    image: url('../icon/up-arrow.png');
     width: 12px;
     height: 12px;
+}
+QSpinBox::down-arrow {
+    image: url('../icon/down-arrow.png');
+    width: 12px;
+    height: 12px;
+
 }
 
 """
@@ -330,3 +336,30 @@ registerpromptstyle="""
     }
 """
 
+Datestyle = """
+    QDateEdit {
+        font-size: 18px;
+        padding: 10px;
+        border: 2px solid #60a698;
+        border-radius: 5px;
+    }
+
+"""
+
+cancelstyle = """
+QPushButton {
+       background-color: red;
+       color: white;
+       font-size: 16px;
+       font-weight: bold;
+       padding: 10px 20px;
+       border: none;
+       border-radius: 8px;
+   }
+   QPushButton:hover {
+       background-color: darkred;
+   }
+   QPushButton:pressed {
+       background-color: crimson;
+   }
+   """

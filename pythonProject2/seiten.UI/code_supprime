@@ -199,3 +199,163 @@
         print(f"Villes sélectionnées : {self.selected_cities}")
 
         return df_filtered
+
+
+
+
+
+
+
+    def load_data(self):
+        """Charger les données depuis le fichier Excel, vérifier les colonnes et nettoyer les données."""
+        try:
+            # Charger les données
+            self.df = pd.read_excel(self.data_file)
+
+            # Vérifier la présence des colonnes nécessaires
+            expected_columns = [
+                "Meerart","Übernachtungen", "Besuchte_Städte", "Schiffstyp",
+                "Innenkabine", "Aussenkabine", "Balkonkabine",
+                "Luxuskabine1", "Luxuskabine2", "Luxuskabine3"
+            ]
+            missing_columns = [col for col in expected_columns if col not in self.df.columns]
+            if missing_columns:
+                self.show_error(f"Colonnes manquantes : {', '.join(missing_columns)}")
+                return
+
+            # Supprimer les lignes entièrement vides
+            self.df = self.df.dropna(how='all')
+
+            # Remplacer "nicht vorhanden" par NaN dans les colonnes de cabines
+            cabine_columns = [
+                "Innenkabine", "Aussenkabine", "Balkonkabine",
+                "Luxuskabine1", "Luxuskabine2", "Luxuskabine3"
+            ]
+            for col in cabine_columns:
+                if col in self.df.columns:
+                    self.df[col] = self.df[col].replace("nicht vorhanden", 0)
+
+                    # Conversion des colonnes en types appropriés
+            type_mappings = {
+                "Übernachtungen": int,
+                "Meerart": str,
+                "Besuchte_Städte": str,
+                "Schiffstyp": str,
+                "Innenkabine": int,
+                "Aussenkabine": int,
+                "Balkonkabine": int,
+                "Luxuskabine1": int,
+                "Luxuskabine2": int,
+                "Luxuskabine3": int,
+            }
+            for col, dtype in type_mappings.items():
+                if col in self.df.columns:
+                    # Convertir les colonnes numériques en entier
+                    if dtype == int:
+                        self.df[col] = pd.to_numeric(self.df[col], errors='coerce').fillna(0).astype(int)
+                    else:
+                        self.df[col] = self.df[col].astype(dtype)
+
+        except FileNotFoundError:
+            self.show_error(f"Fichier introuvable : {self.data_file}")
+        except Exception as e:
+            self.show_error(f"Impossible de charger les données : {e}")
+
+
+
+
+
+
+                def create_reisezeit_page(self, row_data):
+        layout = QVBoxLayout()
+
+        # Détails du voyage
+        trip_details = (
+            f"<b>Trip number:</b> {row_data['Reisenummer']}<br>"
+            f"<b>Sea:</b> {row_data['Meerart']}<br>"
+            f"<b>Number of nights:</b> {row_data['Übernachtungen']}<br>"
+            f"<b>Cities:</b> {row_data['Besuchte_Städte']}<br>"
+            f"<b>Ship type:</b> {row_data['Schiffstyp']}"
+        )
+
+        self.trip_details_label = QLabel()
+        self.trip_details_label.setText(trip_details)
+        self.trip_details_label.setStyleSheet("font-size: 20px; margin-bottom: 20px;")
+        layout.addWidget(self.trip_details_label)
+
+        # Section des villes avec boutons de défilement
+        layout.addWidget(QLabel("Cities:"))
+        self.city_scroll_area = QScrollArea()
+        city_widget = self.create_city_selection2(row_data)  # Crée les images des villes sans boutons
+        self.city_scroll_area.setWidget(city_widget)
+        self.city_scroll_area.setWidgetResizable(True)
+        layout.addWidget(self.city_scroll_area)
+
+        # Boutons de défilement pour les villes
+        scroll_buttons_layout = QHBoxLayout()
+        self.left_scroll_button = QPushButton("<")
+        self.right_scroll_button = QPushButton(">")
+        self.left_scroll_button.clicked.connect(self.scroll_cities_left)
+        self.right_scroll_button.clicked.connect(self.scroll_cities_right)
+        scroll_buttons_layout.addWidget(self.left_scroll_button)
+        scroll_buttons_layout.addWidget(self.right_scroll_button)
+        layout.addLayout(scroll_buttons_layout)
+
+        # Affichage des types de navires
+        layout.addWidget(QLabel("Ship Types:"))
+        self.ship_image_label = QLabel()
+        self.ship_image_label.setFixedSize(300, 250)  # Taille fixe pour l'image
+        self.ship_image_label.setAlignment(Qt.AlignCenter)
+        self.display_selected_ship_image(row_data['Schiffstyp'])  # Afficher l'image du navire
+        layout.addWidget(self.ship_image_label)
+
+        # Affichage des cabines
+        layout.addWidget(QLabel("Cabin:"))
+        self.cabin_image_label = QLabel()
+        self.cabin_image_label.setFixedSize(300, 250)  # Taille fixe pour l'image
+        self.cabin_image_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.cabin_image_label)
+
+        self.update_cabine_choose()
+
+        # Sélection des dates
+        layout.addWidget(QLabel("Departure Date:"))
+        self.departure_date_edit = QDateEdit()
+        self.departure_date_edit.setCalendarPopup(True)
+        self.departure_date_edit.setMinimumDate(QDate(2025, 5, 1))
+        self.departure_date_edit.setMaximumDate(QDate(2025, 10, 31))
+        self.departure_date_edit.dateChanged.connect(self.on_departure_date_changed)
+        layout.addWidget(self.departure_date_edit)
+
+        layout.addWidget(QLabel("Return Date:"))
+        self.return_date_edit = QDateEdit()
+        self.return_date_edit.setCalendarPopup(True)
+        self.return_date_edit.setMinimumDate(QDate(2025, 5, 2))
+        self.return_date_edit.setMaximumDate(QDate(2025, 10, 31))
+        layout.addWidget(self.return_date_edit)
+
+        # Boutons "Return" et "Confirm"
+        button_layout = QHBoxLayout()
+        back_button = QPushButton("Return")
+        back_button.setStyleSheet(back_button_style)
+        back_button.clicked.connect(self.on_back_to_cabin_clicked)
+        button_layout.addWidget(back_button)
+
+        confirm_button = QPushButton("Confirm")
+        confirm_button.setStyleSheet("""
+            QPushButton {
+                background-color: green;
+                color: white;
+                font-size: 16px;
+                padding: 10px;
+                border-radius: 8px;
+            }
+            QPushButton:hover {
+                background-color: darkgreen;
+            }
+        """)
+        confirm_button.clicked.connect(self.on_confirm_date_selection)
+        button_layout.addWidget(confirm_button)
+        layout.addLayout(button_layout)
+
+        return layout
