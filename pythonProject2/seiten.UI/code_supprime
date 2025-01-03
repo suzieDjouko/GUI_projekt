@@ -359,3 +359,27 @@
         layout.addLayout(button_layout)
 
         return layout
+
+
+
+
+
+         def update_payment_page(self, cabin_type, cabin_price):
+        """
+        Update payment page details with selected cabin and price.
+        """
+        # Update cabin details label
+        try:
+            # Mettre à jour les détails de la cabine
+            self.cabin_details_label.setText(
+                f"<b>Selected Cabin:</b> {cabin_type}<br>"
+                f"<b>Price:</b> {self.selected_cabin_price} €"
+
+                #f"<b>Price:</b> {cabin_price} €"
+            )
+
+            # Mettre à jour le prix total
+            self.total_price_label.setText(f"Total Price: {cabin_price} €")
+            print(f"Payment page updated for cabin: {cabin_type}, price: {cabin_price} €")
+        except Exception as e:
+            print(f"Error in update_payment_page: {e}")

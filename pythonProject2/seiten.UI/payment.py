@@ -1,166 +1,190 @@
-from PyQt5.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QLabel, QHBoxLayout, QPushButton, QLineEdit
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox, QHBoxLayout, QComboBox
 
-
-class PaymentProcessor:
-    def __init__(self, username, total_price, payment_method, get_user_balance, update_user_balance):
-        self.username = username
-        self.total_price = total_price
-        self.payment_method = payment_method
-        self.get_user_balance = get_user_balance  # Fonction pour obtenir le solde de l'utilisateur
-        self.update_user_balance = update_user_balance  # Fonction pour mettre à jour le solde de l'utilisateur
-
-    def process_payment(self):
-        """
-        Gère le processus de paiement : validation du solde et mise à jour.
-        """
-        try:
-            user_balance = self.get_user_balance(self.username)
-
-            if user_balance is None:
-                self.show_error("User not found.")
-                return
-
-            if self.total_price > user_balance:
-                self.show_error("Insufficient balance.")
-                return
-
-            # Si le solde est suffisant, mettre à jour le solde
-            new_balance = user_balance - self.total_price
-            self.update_user_balance(self.username, new_balance)
-
-            # Afficher un message de succès
-            self.show_success(f"Your payment of {self.total_price} € using {self.payment_method} was successful.")
-            return new_balance  # Retourne le nouveau solde après le paiement
-        except Exception as e:
-            self.show_error(f"Error processing payment: {e}")
-
-    def show_error(self, message):
-        """Affiche un message d'erreur dans une boîte de dialogue."""
-        QMessageBox.warning(None, "Payment Error", message)
-
-    def show_success(self, message):
-        """Affiche un message de succès dans une boîte de dialogue."""
-        QMessageBox.information(None, "Payment Successful", message)
-
-
-class PurchasedProductDialog(QDialog):
-    def __init__(self, trip_data, user_data, balance, parent=None):
+from styles import *
+from utiles import *
+class PurchaseDialog(QDialog):
+    def __init__(self, trip_data, cabin_type, cabin_price, user_balance , user_name, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Gekauftes Produkt")
+        self.setWindowTitle("Confirm Purchase")
+        self.resize(800, 600)
+
 
         self.trip_data = trip_data
-        self.user_data = user_data
-        self.balance = balance
+        self.cabin_type = cabin_type
+        self.cabin_price = cabin_price
+        self.user_balance = user_balance
+        self.user_name = user_name
 
-        # Layout pour le dialogue
+        # Layout principal
         layout = QVBoxLayout()
+        layout.setSpacing(20)
 
-        # Afficher les informations sur la réservation
-        trip_info = QLabel(f"Reise Nummer: {self.trip_data['Reisenummer']}\n"
-                           f"Schiffstyp: {self.trip_data['Schiffstyp']}\n"
-                           f"Kabinenart: {self.trip_data['Kabinentyp']}\n"
-                           f"Reisedaten: {self.trip_data['Reisedatum']}\n"
-                           f"Reisepreis: {self.trip_data['Preis']} €")
-        layout.addWidget(trip_info)
-
-        # Afficher les villes visitées (ici, on les affiche toutes en même temps ou une par une)
-        cities_layout = QHBoxLayout()
-        if self.user_data['show_cities_together']:
-            for city in self.trip_data['Besuchte_Städte']:
-                city_label = QLabel(city)
-                cities_layout.addWidget(city_label)
-        else:
-            self.city_index = 0
-            self.city_label = QLabel(self.trip_data['Besuchte_Städte'][self.city_index])
-            next_button = QPushButton("Nächste Stadt")
-            next_button.clicked.connect(self.show_next_city)
-            cities_layout.addWidget(self.city_label)
-            cities_layout.addWidget(next_button)
-
-        layout.addLayout(cities_layout)
-
-        # Bouton pour acheter et entrer les données utilisateur
-        buy_button = QPushButton("Reise kaufen")
-        buy_button.clicked.connect(self.purchase_trip)
-        layout.addWidget(buy_button)
-
-        self.setLayout(layout)
-
-    def show_next_city(self):
-        """Affiche la prochaine ville dans la liste"""
-        if self.city_index < len(self.trip_data['Besuchte_Städte']) - 1:
-            self.city_index += 1
-            self.city_label.setText(self.trip_data['Besuchte_Städte'][self.city_index])
-
-    def purchase_trip(self):
-        """Confirme l'achat et affiche le formulaire de données utilisateur"""
-        self.accept()  # Ferme le dialogue actuel
-        self.show_user_data_dialog()
-
-    def show_user_data_dialog(self):
-        """Affiche le dialogue pour les données utilisateur"""
-        user_data_dialog = UserDataDialog(self.user_data, self.trip_data, self.balance)
-        user_data_dialog.exec_()
+        # Résumé des informations de réservation
+        layout.addWidget(QLabel(f"<b>Trip Number:</b> {trip_data['Reisenummer']}"))
+        layout.addWidget(QLabel(f"<b>Cabin Type:</b> {cabin_type}"))
+        layout.addWidget(QLabel(f"<b>Price:</b> {int(cabin_price)} €"))
+        #layout.addWidget(QLabel(f"<b>Remaining Balance:</b> {user_balance - cabin_price:} €"))
+        layout.addWidget(QLabel(f"<b>Remaining Balance:</b> {int(user_balance - cabin_price)} €<br>"))
 
 
-class UserDataDialog(QDialog):
-    def __init__(self, user_data, trip_data, balance, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Benutzerdaten für die Buchung")
+        # Champs pour les données utilisateur
+        self.street_input = QLineEdit()
+        self.street_input.setPlaceholderText("Enter your street")
+        self.street_input.setStyleSheet(loginmainstyle)
+        layout.addWidget(QLabel("Street and Number:"))
+        layout.addWidget(self.street_input)
 
-        self.user_data = user_data
-        self.trip_data = trip_data
-        self.balance = balance
+        self.postal_code_input = QLineEdit()
+        self.postal_code_input.setPlaceholderText("Enter your postal code")
+        self.postal_code_input.setStyleSheet(loginmainstyle)
+        layout.addWidget(QLabel("Postal Code:"))
+        layout.addWidget(self.postal_code_input)
 
-        layout = QVBoxLayout()
-
-        # Formulaire pour les données utilisateur
-        self.name_input = QLineEdit()
-        self.name_input.setText(self.user_data['name'])
-        layout.addWidget(QLabel("Name:"))
-        layout.addWidget(self.name_input)
-
-        self.address_input = QLineEdit()
-        layout.addWidget(QLabel("Adresse:"))
-        layout.addWidget(self.address_input)
+        self.country_input = QLineEdit()
+        self.country_input.setText("Germany")
+        self.country_input.setStyleSheet(loginmainstyle)
+        self.country_input.setReadOnly(True)
+        layout.addWidget(QLabel("Country:"))
+        layout.addWidget(self.country_input)
 
         self.phone_input = QLineEdit()
-        layout.addWidget(QLabel("Handynummer:"))
+        self.phone_input.setStyleSheet(loginmainstyle)
+        self.phone_input.setPlaceholderText("Enter your phone number")
+        layout.addWidget(QLabel("Phone:"))
         layout.addWidget(self.phone_input)
 
-        self.bank_input = QLineEdit()
-        layout.addWidget(QLabel("Bankdaten:"))
-        layout.addWidget(self.bank_input)
+        # Sélection de la méthode de paiement
+        self.payment_method_combo = QComboBox()
+        self.payment_method_combo.setStyleSheet(style_box)
+        self.payment_method_combo.addItems(["Bank Transfer", "Credit Card", "PayPal"])
+        self.payment_method_combo.currentTextChanged.connect(self.update_payment_fields)
+        layout.addWidget(QLabel("Payment Method:"))
+        layout.addWidget(self.payment_method_combo)
 
-        # Confirmation de l'achat
-        confirm_button = QPushButton("Bestätigen")
-        confirm_button.clicked.connect(self.confirm_purchase)
-        layout.addWidget(confirm_button)
+        # Champs dynamiques pour les informations de paiement
+        self.dynamic_payment_layout = QVBoxLayout()
+        self.payment_input = QLineEdit()
+        self.payment_input.setStyleSheet(loginmainstyle)
+        self.payment_input.setPlaceholderText("Enter your bank details")
+        self.dynamic_payment_layout.addWidget(QLabel("Bank Details:"))
+        self.dynamic_payment_layout.addWidget(self.payment_input)
+
+        self.card_number_input = QLineEdit()
+        self.card_number_input.setStyleSheet(loginmainstyle)
+        self.card_number_input.setPlaceholderText("Enter your card number")
+
+        self.cvv_input = QLineEdit()
+        self.cvv_input.setStyleSheet(loginmainstyle)
+        self.cvv_input.setPlaceholderText("Enter your CVV")
+        self.cvv_input.setMaxLength(3)
+
+        self.paypal_email_input = QLineEdit()
+        self.paypal_email_input.setPlaceholderText("Enter your PayPal email")
+
+        layout.addLayout(self.dynamic_payment_layout)
+
+        # Boutons pour confirmer ou annuler l'achat
+        button_layout = QHBoxLayout()
+
+        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.setStyleSheet(cancelstyle)
+        self.cancel_button.clicked.connect(self.reject)
+        button_layout.addWidget(self.cancel_button)
+
+        self.confirm_button = QPushButton("Confirm")
+        self.confirm_button.setEnabled(False)
+        self.confirm_button.setStyleSheet(confirmbtnstyledisable)
+        self.confirm_button.clicked.connect(self.confirm_purchase)
+        button_layout.addWidget(self.confirm_button)
+
+        self.street_input.textChanged.connect(self.check_fields)
+        self.postal_code_input.textChanged.connect(self.check_fields)
+        self.phone_input.textChanged.connect(self.check_fields)
+        self.payment_input.textChanged.connect(self.check_fields)
+
+        layout.addLayout(button_layout)
 
         self.setLayout(layout)
 
+    def update_payment_fields(self):
+        """
+        Met à jour les champs affichés en fonction de la méthode de paiement choisie.
+        """
+        method = self.payment_method_combo.currentText()
+
+        # Effacer le layout dynamique
+        for i in reversed(range(self.dynamic_payment_layout.count())):
+            widget = self.dynamic_payment_layout.takeAt(i).widget()
+            if widget is not None:
+                widget.deleteLater()
+
+        if method == "Bank Transfer":
+            self.payment_input = QLineEdit()
+            self.payment_input.setPlaceholderText("Enter your bank details")
+            self.dynamic_payment_layout.addWidget(QLabel("Bank Details:"))
+            self.dynamic_payment_layout.addWidget(self.payment_input)
+        elif method == "Credit Card":
+            self.card_number_input = QLineEdit()
+            self.card_number_input.setPlaceholderText("Enter your card number")
+            self.cvv_input = QLineEdit()
+            self.cvv_input.setPlaceholderText("Enter your CVV")
+            self.cvv_input.setMaxLength(3)
+            self.dynamic_payment_layout.addWidget(QLabel("Card Number:"))
+            self.dynamic_payment_layout.addWidget(self.card_number_input)
+            self.dynamic_payment_layout.addWidget(QLabel("CVV:"))
+            self.dynamic_payment_layout.addWidget(self.cvv_input)
+        elif method == "PayPal":
+            self.paypal_email_input = QLineEdit()
+            self.paypal_email_input.setPlaceholderText("Enter your PayPal email")
+            self.dynamic_payment_layout.addWidget(QLabel("PayPal Email:"))
+            self.dynamic_payment_layout.addWidget(self.paypal_email_input)
+
+        self.check_fields()
+
+    def check_fields(self):
+        """
+        Vérifie si tous les champs nécessaires sont remplis et valides, et active le bouton "Confirm".
+        """
+        street_valid = is_valid_street(self.street_input.text().strip())
+        postal_code_valid = is_valid_postcode(self.postal_code_input.text().strip())
+        phone_valid = is_valid_phone(self.phone_input.text().strip())
+
+        method = self.payment_method_combo.currentText()
+        payment_valid = False
+
+        if method == "Bank Transfer":
+            payment_valid =is_valid_bank_details(self.payment_input.text().strip())
+        elif method == "Credit Card":
+            payment_valid = (
+                is_valid_credit_card(self.card_number_input.text().strip())
+                and is_valid_cvv(self.cvv_input.text().strip())
+            )
+        elif method == "PayPal":
+            payment_valid = is_valid_email(self.paypal_email_input.text().strip())
+
+        if street_valid and postal_code_valid and phone_valid and self.payment_input.text().strip():
+            if payment_valid:
+                self.confirm_button.setEnabled(True)
+        else:
+            self.confirm_button.setEnabled(False)
+
     def confirm_purchase(self):
-        """Confirme l'achat et enregistre les données utilisateur"""
-        name = self.name_input.text()
-        address = self.address_input.text()
-        phone = self.phone_input.text()
-        bank_details = self.bank_input.text()
+        #strip supprimes les expaces unitiles au debut et  a la fin
+        street = self.street_input.text().strip()
+        postal_code = self.postal_code_input.text().strip()
+        phone = self.phone_input.text().strip()
+        bank_details = self.payment_method_combo.currentText()
 
-        # Enregistre les données dans un fichier texte
-        with open("buchung.txt", "a") as file:
-            file.write(f"Name: {name}\n")
-            file.write(f"Reisenummer: {self.trip_data['Reisenummer']}\n")
-            file.write(f"Kabinenart: {self.trip_data['Kabinentyp']}\n")
-            file.write(f"Preis: {self.trip_data['Preis']} €\n")
-            file.write(f"Adresse: {address}\n")
-            file.write(f"Handynummer: {phone}\n")
-            file.write(f"Bankdaten: {bank_details}\n")
-            file.write("\n")
+        with open("bookings.txt", "a") as file:
+            file.write(f"Name: {self.user_name}\n")
+            file.write(f"Trip Number: {self.trip_data['Reisenummer']}\n")
+            file.write(f"Cabin Type: {self.cabin_type}\n")
+            file.write(f"Price: {self.cabin_price:} €\n")
+            file.write(f"Address: {street}, {postal_code}, Germany\n")
+            file.write(f"Phone: {phone}\n")
+            file.write(f"Bank Details: {bank_details}\n")
+            file.write("-" * 50 + "\n")
+        QMessageBox.information(self, "Purchase Successful", "Your booking has been confirmed!")
 
-        # Mise à jour du solde
-        new_balance = self.balance - self.trip_data['Preis']
-        self.user_data['balance'] = new_balance
-
-        # Affiche un message de confirmation
-        QMessageBox.information(self, "Erfolgreich", "Ihre Reise wurde erfolgreich gebucht!")
+        # Fermez le dialogue avec succès
         self.accept()

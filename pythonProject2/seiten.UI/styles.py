@@ -363,3 +363,45 @@ QPushButton {
        background-color: crimson;
    }
    """
+validbtnstyle = """
+QPushButton {
+        background-color: #007bff;
+        color: white;
+        font-size: 16px;
+        padding: 8px 16px;
+        border-radius: 5px;
+    }
+    QPushButton:hover {
+        background-color: #0056b3;
+    }
+
+"""
+confirmbtnstyle = """
+QPushButton {
+                background-color: green;
+                color: white;
+                font-size: 16px;
+                padding: 10px;
+                border-radius: 8px;
+            }
+            QPushButton:hover {
+                background-color: darkgreen;
+            }
+
+
+"""
+
+confirmbtnstyledisable = """
+QPushButton {
+                background-color: lightgray;
+                color: gray;
+                font-size: 16px;
+                padding: 10px;
+                border-radius: 8px;
+            }
+            QPushButton:hover {
+                background-color: darkgreen;
+            }
+
+
+"""

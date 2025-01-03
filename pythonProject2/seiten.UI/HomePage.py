@@ -1,20 +1,19 @@
 import sys
 
-from PyQt5 import QtCore
 from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QHBoxLayout,
     QScrollArea, QComboBox, QSpinBox, QSizePolicy, QLineEdit,
-    QSpacerItem, QStackedWidget, QFrame, QListWidget, QListWidgetItem, QCalendarWidget, QDateEdit
+    QSpacerItem, QStackedWidget, QFrame, QListWidget, QListWidgetItem, QCalendarWidget, QDateEdit, QDialog
 )
 from PyQt5.QtGui import QTextCharFormat, QColor
+
 
 
 from styles import *
 from database_action import *
 from functionen import *
-
-from payment import PaymentProcessor
+from utiles import*
 
 from user_info import UserInfoWindow
 
@@ -243,6 +242,7 @@ class VoyageApp(QMainWindow):
 
         selection_layout = QVBoxLayout()
 
+
         # Section du type de mer
         sea_selection_layout = QHBoxLayout()
         sea_selection_layout.setContentsMargins(0, 0, 0, 20)
@@ -354,6 +354,7 @@ class VoyageApp(QMainWindow):
         self.cabin_scroll_area = QScrollArea()
         self.cabin_scroll_area.setWidgetResizable(True)
 
+
         cabin_content_widget = QWidget()
         cabin_content_widget.setLayout(self.cabin_layout)
 
@@ -365,107 +366,135 @@ class VoyageApp(QMainWindow):
         cabin_page_layout.addWidget(back_button)
         self.cabin_page.setLayout(cabin_page_layout)
 
+        # PAGE SELECTION DE DATE
+        self.reisezeit_page_layout = QVBoxLayout()  # Layout principal pour la page
 
-        #PAGE SELECTION DE DATE
-        self.reisezeit_layout = QVBoxLayout()
+        # Ajouter un titre hors du scroll
+        adjust_title = QLabel("<h2>Adjust Your Travel Time</h2>")
+        adjust_title.setAlignment(Qt.AlignCenter)
+        self.reisezeit_page_layout.addWidget(adjust_title)
 
-        # Détails du voyage
+        # Section avec le contenu scrollable
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+
+        # Conteneur pour le contenu scrollable
+        scrollable_widget = QWidget()
+        self.reisezeit_layout = QVBoxLayout(scrollable_widget)
+
+        # Ajouter des détails du voyage
         self.reisezeit_trip_details_label = QLabel()
-        self.reisezeit_trip_details_label.setStyleSheet("font-size: 20px; margin-bottom: 20px;")
+        self.reisezeit_trip_details_label.setStyleSheet("font-size: 18px; margin-bottom: 20px;")
+        self.reisezeit_layout.addWidget(self.reisezeit_trip_details_label)
+
+        # Section pour les villes
+        self.reisezeit_layout.addWidget(QLabel("Cities:"))
         self.reisezeit_city_scroll_area = QScrollArea()
         self.reisezeit_city_scroll_area.setWidgetResizable(True)
+        self.reisezeit_layout.addWidget(self.reisezeit_city_scroll_area)
 
+        # Images de type de bateau et cabine
+        self.reisezeit_ship_cabin_layout = QHBoxLayout()
+        ship_layout = QVBoxLayout()
+        ship_layout.addWidget(QLabel("Ship Type:"))
         self.reisezeit_ship_image_label = QLabel()
         self.reisezeit_ship_image_label.setFixedSize(300, 250)
         self.reisezeit_ship_image_label.setAlignment(Qt.AlignCenter)
-
-        self.reisezeit_cabin_image_label = QLabel()
-        self.reisezeit_cabin_image_label.setFixedSize(300, 250)
-        self.reisezeit_cabin_image_label.setAlignment(Qt.AlignCenter)
-
-        self.reisezeit_layout = QVBoxLayout()
-        self.reisezeit_layout.addWidget(self.reisezeit_trip_details_label)
-        self.reisezeit_layout.addWidget(QLabel("Cities:"))
-        self.reisezeit_layout.addWidget(self.reisezeit_city_scroll_area)
-        self.reisezeit_ship_cabin_layout = QHBoxLayout()
-
-
-        ship_layout = QVBoxLayout()
-        ship_layout.addWidget(QLabel("Ship Type:"))
         ship_layout.addWidget(self.reisezeit_ship_image_label)
         self.reisezeit_ship_cabin_layout.addLayout(ship_layout)
 
         cabin_layout = QVBoxLayout()
         cabin_layout.addWidget(QLabel("Cabin:"))
+        self.reisezeit_cabin_image_label = QLabel()
+        self.reisezeit_cabin_image_label.setFixedSize(300, 250)
+        self.reisezeit_cabin_image_label.setAlignment(Qt.AlignCenter)
         cabin_layout.addWidget(self.reisezeit_cabin_image_label)
         self.reisezeit_ship_cabin_layout.addLayout(cabin_layout)
 
         self.reisezeit_layout.addLayout(self.reisezeit_ship_cabin_layout)
 
-        # Sélection des dates
+        # Ajouter les sélections de dates
         self.reisezeit_layout.addWidget(QLabel("Departure Date:"))
         self.departure_date_edit = QDateEdit()
+        self.departure_date_edit.setStyleSheet(Datestyle)
         self.departure_date_edit.setCalendarPopup(True)
         self.departure_date_edit.setMinimumDate(QDate(2025, 5, 1))
         self.departure_date_edit.setMaximumDate(QDate(2025, 10, 31))
-        self.departure_date_edit.dateChanged.connect(self.on_departure_date_changed)
-        self.departure_date_edit.setStyleSheet(Datestyle)
         self.reisezeit_layout.addWidget(self.departure_date_edit)
 
         self.reisezeit_layout.addWidget(QLabel("Return Date:"))
         self.return_date_edit = QDateEdit()
+        self.return_date_edit.setStyleSheet(Datestyle)
         self.return_date_edit.setCalendarPopup(True)
         self.return_date_edit.setMinimumDate(QDate(2025, 5, 2))
         self.return_date_edit.setMaximumDate(QDate(2025, 10, 31))
         self.reisezeit_layout.addWidget(self.return_date_edit)
+        date_button_layout = QHBoxLayout()
+        date_button_layout.addStretch()
 
-        spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        self.reisezeit_layout.addItem(spacer)
+        self.validate_date_button = QPushButton("Valid")
+        self.validate_date_button.setFixedSize(150, 40)
+        self.validate_date_button.setStyleSheet(validbtnstyle)
+        self.validate_date_button.clicked.connect(self.on_validate_date_clicked)
+        date_button_layout.addWidget(self.validate_date_button,alignment=Qt.AlignRight)
 
-        self.reisezeit_cancel = QPushButton("Cancel")
-        self.reisezeit_cancel.setFixedSize(150, 40)
-        self.reisezeit_cancel.setStyleSheet(cancelstyle)
-        self.reisezeit_layout.addWidget(self.reisezeit_cancel)
-        self.reisezeit_layout.addWidget(self.reisezeit_cancel, alignment=Qt.AlignRight)
-        self.reisezeit_cancel.clicked.connect(lambda : self.stacked_widget.setCurrentWidget(self.selection_page))
+        self.cancel_date_button = QPushButton("Cancel")
+        self.cancel_date_button.setFixedSize(150, 40)
+        self.cancel_date_button.setStyleSheet(cancelstyle)
+        self.cancel_date_button.clicked.connect(self.on_cancel_date_clicked)
+        date_button_layout.addWidget(self.cancel_date_button,alignment=Qt.AlignRight)
 
-        # Ajouter les boutons en bas de la page
-        self.reisezeit_button_layout = QHBoxLayout()
-        self.reisezeit_button_layout.setContentsMargins(20, 20, 20, 20)
-        self.reisezeit_button_layout.setSpacing(20)
+        # Ajouter le layout des boutons au layout principal
+        self.reisezeit_layout.addLayout(date_button_layout)
 
+        # Section pour les voyages achetés
+
+        self.reisezeit_layout.addWidget(QLabel("<b>Purchased Products</b>"))
+        self.gekauft_scroll_area = QScrollArea()
+        self.gekauft_scroll_area.setWidgetResizable(True)
+
+        self.date_layout = QVBoxLayout()
+
+
+        self.gekauft_container = QWidget()
+
+        self.gekauft_layout = QVBoxLayout(self.gekauft_container)
+        #self.gekauft_layout.addLayout(self.date_layout)
+        self.gekauft_layout.setContentsMargins(20, 10, 20, 10)
+        self.gekauft_layout.setSpacing(15)
+
+
+
+        self.gekauft_scroll_area.setWidget(self.gekauft_container)
+        self.reisezeit_layout.addWidget(self.gekauft_scroll_area)
+
+        scroll_area.setWidget(scrollable_widget)
+        self.reisezeit_page_layout.addWidget(scroll_area)
+
+        button_layout = QHBoxLayout()
         self.reisezeit_return_button = QPushButton("Return")
         self.reisezeit_return_button.setStyleSheet(back_button_style)
         self.reisezeit_return_button.clicked.connect(self.on_back_to_cabin_clicked)
-        self.return_date_edit.setStyleSheet(Datestyle)
-
 
         self.reisezeit_confirm_button = QPushButton("Confirm")
-        self.reisezeit_confirm_button.setStyleSheet("""
-                QPushButton {
-                    background-color: green;
-                    color: white;
-                    font-size: 16px;
-                    padding: 10px;
-                    border-radius: 8px;
-                }
-                QPushButton:hover {
-                    background-color: darkgreen;
-                }
-            """)
+        self.reisezeit_confirm_button.setEnabled(False)
+        self.reisezeit_confirm_button.setStyleSheet(confirmbtnstyledisable)
+
         self.reisezeit_confirm_button.clicked.connect(self.on_confirm_date_selection)
 
-        self.reisezeit_button_layout.addWidget(self.reisezeit_return_button)
-        self.reisezeit_button_layout.addWidget(self.reisezeit_confirm_button)
-        self.reisezeit_layout.addLayout(self.reisezeit_button_layout)
+        button_layout.addWidget(self.reisezeit_return_button)
+        button_layout.addWidget(self.reisezeit_confirm_button)
 
-        self.reisezeit_page.setLayout(self.reisezeit_layout)
+        self.reisezeit_page_layout.addLayout(button_layout)
+
+        # Configurer la page Reisezeit
+        self.reisezeit_page.setLayout(self.reisezeit_page_layout)
 
 
-
-
-        #PAGE PAYEMENT
+        # PAGE PAYEMENT
         self.payment_layout = QVBoxLayout()
+        self.payment_layout.setContentsMargins(20, 0, 20, 0)
+        self.payment_layout.setSpacing(20)
 
         # Payment Page Title
         self.payment_label = QLabel("Payment")
@@ -473,59 +502,98 @@ class VoyageApp(QMainWindow):
         self.payment_label.setStyleSheet("font-size: 24px; font-weight: bold; margin-bottom: 20px;")
         self.payment_layout.addWidget(self.payment_label)
 
+
         # Payment Details Section
         self.payment_details_layout = QVBoxLayout()
-
-        # Add Cabin Details
-        self.cabin_details_label = QLabel()
-        self.cabin_details_label.setStyleSheet("font-size: 16px; margin-bottom: 10px;")
-        self.payment_details_layout.addWidget(self.cabin_details_label)
 
         # Add Total Price Label
         self.total_price_label = QLabel("Total Price: €0")
         self.total_price_label.setStyleSheet("font-size: 18px; font-weight: bold; color: green; margin-bottom: 20px;")
         self.payment_details_layout.addWidget(self.total_price_label)
+        self.reservation_details_label = QLabel("")
+        self.reservation_details_label.setStyleSheet("font-size: 16px; margin-bottom: 20px;")
+        self.payment_details_layout.addWidget(self.reservation_details_label)
 
-        # Add Payment Details Layout to the Main Layout
+        # Address Fields
+        self.street_input = QLineEdit()
+        self.street_input.setPlaceholderText("Enter your street")
+        self.street_input.setStyleSheet(loginmainstyle)
+        self.payment_details_layout.addWidget(QLabel("Street and Number:"))
+        self.payment_details_layout.addWidget(self.street_input)
+
+        self.postal_code_input = QLineEdit()
+        self.postal_code_input.setPlaceholderText("Enter your postal code")
+        self.postal_code_input.setStyleSheet(loginmainstyle)
+        self.payment_details_layout.addWidget(QLabel("Postal Code:"))
+        self.payment_details_layout.addWidget(self.postal_code_input)
+
+        self.country_input = QLineEdit()
+        self.country_input.setText("Germany")
+        self.country_input.setStyleSheet(loginmainstyle)
+        self.country_input.setReadOnly(True)
+        self.payment_details_layout.addWidget(QLabel("Country:"))
+        self.payment_details_layout.addWidget(self.country_input)
+
+        self.phone_input = QLineEdit()
+        self.phone_input.setPlaceholderText("Enter your phone number")
+        self.phone_input.setStyleSheet(loginmainstyle)
+        self.payment_details_layout.addWidget(QLabel("Phone:"))
+        self.payment_details_layout.addWidget(self.phone_input)
+
+        # Payment Method Fields
+        self.payment_method_combo = QComboBox()
+        self.payment_method_combo.setStyleSheet(style_box)
+        self.payment_method_combo.addItems(["Bank Transfer", "Credit Card", "PayPal"])
+        self.payment_method_combo.currentTextChanged.connect(self.update_payment_fields)
+        self.payment_details_layout.addWidget(QLabel("Payment Method:"))
+        self.payment_details_layout.addWidget(self.payment_method_combo)
+
+        # Dynamic Payment Fields
+        self.dynamic_payment_layout = QVBoxLayout()
+        self.payment_details_layout.addLayout(self.dynamic_payment_layout)
+
         self.payment_layout.addLayout(self.payment_details_layout)
 
-        # Payment Methods Section
-        self.payment_methods_label = QLabel("Choose a Payment Method:")
-        self.payment_methods_label.setStyleSheet("font-size: 16px; margin-bottom: 10px;")
-        self.payment_layout.addWidget(self.payment_methods_label)
-
-        # Payment Methods Dropdown
-        self.payment_methods_combo = QComboBox()
-        self.payment_methods_combo.addItems(["Credit Card", "PayPal", "Bank Transfer"])
-        self.payment_methods_combo.setStyleSheet("font-size: 14px; padding: 5px; margin-bottom: 20px;")
-        self.payment_layout.addWidget(self.payment_methods_combo)
-
-        # Buttons Section
+        # Confirm and Cancel Buttons
         self.payment_buttons_layout = QHBoxLayout()
 
-        # Back Button
         self.payment_back_button = QPushButton("Return")
         self.payment_back_button.setStyleSheet(back_button_style)
         self.payment_back_button.clicked.connect(
-            lambda: self.stacked_widget.setCurrentWidget(self.reisezeit_page))  # Navigate back
+            lambda: self.stacked_widget.setCurrentWidget(self.reisezeit_page)
+        )
         self.payment_buttons_layout.addWidget(self.payment_back_button)
 
-        # Proceed to Payment Button
-        self.proceed_button = QPushButton("Proceed to Payment")
-        self.proceed_button.setStyleSheet(
-            """
-            background-color: green; 
-            color: white; 
-            font-size: 14px; 
-            padding: 10px;
-            border-radius: 8px;
-            """
-        )
-        self.proceed_button.clicked.connect(self.process_payment)  # Implement payment processing
-        self.payment_buttons_layout.addWidget(self.proceed_button)
+        self.payment_confirm_button = QPushButton("Confirm Purchase")
+        self.payment_confirm_button.setEnabled(False)
+        self.payment_confirm_button.setStyleSheet(confirmbtnstyledisable)
+        self.payment_confirm_button.clicked.connect(self.confirm_purchase)
+        self.payment_buttons_layout.addWidget(self.payment_confirm_button)
 
-        # Add Buttons Layout to Main Payment Layout
+        self.street_input.textChanged.connect(self.check_payment_fields)
+        self.postal_code_input.textChanged.connect(self.check_payment_fields)
+        self.phone_input.textChanged.connect(self.check_payment_fields)
+        self.payment_method_combo.currentTextChanged.connect(self.check_payment_fields)
+
         self.payment_layout.addLayout(self.payment_buttons_layout)
+
+        # Add the "Download Booking" button to the payment page
+        self.pbutton_layout = QHBoxLayout()
+
+        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.setStyleSheet(cancelstyle)
+        self.cancel_button.setFixedSize(200, 50)
+        self.cancel_button.clicked.connect(self.on_cancel_date_clicked)
+        self.pbutton_layout.addWidget(self.cancel_button)
+
+        self.download_button = QPushButton("Download Booking")
+        self.download_button.setStyleSheet(validbtnstyle)
+        self.download_button.setFixedSize(200, 50)
+        self.download_button.clicked.connect(self.save_as_txt)
+        self.pbutton_layout.addWidget(self.download_button)
+
+        self.payment_layout.addLayout(self.payment_buttons_layout)
+        self.payment_layout.addLayout(self.pbutton_layout)
 
         # Set Layout for the Payment Page
         self.payment_page.setLayout(self.payment_layout)
@@ -535,8 +603,6 @@ class VoyageApp(QMainWindow):
         main_layout.addLayout(self.menuLayout)
         self.selection_page.setLayout(selection_layout)
 
-
-        self.payment_page.setLayout(self.payment_layout)
 
         main_layout.addWidget(self.stacked_widget)
 
@@ -567,7 +633,7 @@ class VoyageApp(QMainWindow):
                 f"<b>Price:</b> {self.selected_cabin_price} €"
             )
             self.reisezeit_trip_details_label.setText(trip_details)
-            self.apply_date_restrictions(row_data['Schiffstyp'])
+            self.apply_date_restrictions(row_data['Schiffstyp'],row_data['Übernachtungen'])
 
             # Vider et mettre à jour les images des villes
             city_layout = QHBoxLayout()
@@ -603,17 +669,7 @@ class VoyageApp(QMainWindow):
         except Exception as e:
             print(f"Erreur lors de la mise à jour de la page Reisezeit : {e}")
 
-    def on_departure_date_changed(self, date):
-
-        print(f"Date de départ sélectionnée : {date.toString(Qt.ISODate)}")
-        # Vous pouvez ajouter ici la logique que vous souhaitez appliquer
-        # par exemple, ajuster la date de retour pour qu'elle soit après la date de départ
-        if self.return_date_edit.date() < date:
-            # Si la date de retour est avant la date de départ, la mettre à jour
-            self.return_date_edit.setDate(
-                date.addDays(1))  # Exemple : la date de retour doit être au moins 1 jour après la date de départ
-
-    def apply_date_restrictions(self, ship_type):
+    def apply_date_restrictions(self, ship_type, nights):
         # Dictionnaire des jours de départ par type de navire
         ship_departure_days = {
             'A': [1],  # Monday
@@ -643,7 +699,13 @@ class VoyageApp(QMainWindow):
             if current_date.dayOfWeek() not in valid_days:
                 self.departure_date_edit.calendarWidget().setDateTextFormat(current_date, disabled_format)
             else:
-                self.departure_date_edit.calendarWidget().setDateTextFormat(current_date, enabled_format)
+                #self.departure_date_edit.calendarWidget().setDateTextFormat(current_date, enabled_format)
+                return_date = current_date.addDays(nights)
+                if return_date > QDate(2025, 10, 31):
+                    self.departure_date_edit.calendarWidget().setDateTextFormat(current_date, disabled_format)
+                else:
+                    self.departure_date_edit.calendarWidget().setDateTextFormat(current_date, enabled_format)
+
             current_date = current_date.addDays(1)
     def get_filtered_results(self):
 
@@ -680,38 +742,6 @@ class VoyageApp(QMainWindow):
             print(f"Villes sélectionnées : {self.selected_cities}")
 
             return df_filtered
-
-    def process_payment(self):
-        try:
-            selected_method = self.payment_methods_combo.currentText()
-            total_price_text = self.total_price_label.text().strip()
-
-            if "Total Price: €" in total_price_text:
-                total_price = str(total_price_text.replace("Total Price: €", "").strip())
-            else:
-                self.show_error("Unable to retrieve the total price.")
-                return
-
-            # Créer une instance de PaymentProcessor
-            payment_processor = PaymentProcessor(
-                username = self.header_user_name_edit.text(),
-                total_price = total_price,
-                payment_method = selected_method,
-                get_user_balance = get_user_balance,  # Assure-toi que get_user_balance est une fonction valide
-                update_user_balance = update_user_balance  # Idem pour update_user_balance
-            )
-
-            # Appeler la méthode process_payment() pour traiter le paiement
-            new_balance = payment_processor.process_payment()
-
-            # Si le paiement a réussi, mettre à jour l'interface avec le nouveau solde
-            if new_balance is not None:
-                self.kontostand_amont_edit.setText(f"{new_balance} €")
-
-
-        except Exception as e:
-            print(f"Error in process_payment: {e}")
-
     def add_result_item_with_cabins(self, row_data):
         """
         Add a trip to the QListWidget with details on one line and a "Choose" button aligned to the right.
@@ -772,12 +802,6 @@ class VoyageApp(QMainWindow):
 
         self.result_label.setText("Results found:")
 
-   # def on_cabin_selected(self, cabin_type, cabin_price,row_data):
-    #    self.selected_cabin_type = cabin_type
-     #   print(f"Cabin selected: {self.selected_cabin_type}")
-      #  self.update_payment_page(cabin_type, cabin_price)
-       # self.update_reisezeit_page(row_data)
-        #self.stacked_widget.setCurrentWidget(self.reisezeit_page)
     def on_pay_clicked(self, cabin_type, cabin_price, row_data):
         """
         Méthode appelée lorsque le bouton 'Pay' est cliqué.
@@ -786,6 +810,9 @@ class VoyageApp(QMainWindow):
             # Stocker la cabine sélectionnée et son prix
             self.selected_cabin_type = cabin_type
             self.selected_cabin_price = cabin_price
+            self.selected_trip_data = row_data
+
+            self.total_price_label.setText(f"Total Price: €{cabin_price}")
 
             # Mettre à jour la page Reisezeit
             self.update_reisezeit_page(row_data)
@@ -797,7 +824,8 @@ class VoyageApp(QMainWindow):
             print(f"Erreur lors de la mise à jour de la page Reisezeit : {e}")
 
     def on_confirm_date_selection(self):
-        self.stacked_widget.setCurrentWidget(self.payment_page)  # Rediriger vers la page de paiement
+            self.update_payment_page(self.selected_trip_data)
+            self.stacked_widget.setCurrentWidget(self.payment_page)
 
     def on_back_to_results_clicked(self):
         self.stacked_widget.setCurrentWidget(self.result_page)  # Naviguer vers la page des résultats
@@ -838,10 +866,24 @@ class VoyageApp(QMainWindow):
         )
         self.cabin_summary_label.setText(trip_details)
 
+        self.selected_trip_data = row_data
+
 
         self.display_selected_ship_image(row_data['Schiffstyp'])
         self.display_cabin_images(row_data)
         self.stacked_widget.setCurrentWidget(self.cabin_page)
+
+    def update_payment_page(self, row_data):
+       trip_details = (
+           f"<b>Trip number:</b> {row_data['Reisenummer']}<br>"
+           f"<b>Sea:</b> {row_data['Meerart']}<br>"
+           f"<b>Number of nights:</b> {row_data['Übernachtungen']}<br>"
+           f"<b>Cities:</b> {row_data['Besuchte_Städte']}<br>"
+           f"<b>Ship type:</b> {row_data['Schiffstyp']}<br>"
+           f"<b>Selected Cabin:</b> {self.selected_cabin_type}<br>"
+           f"<b>Price:</b> {self.selected_cabin_price} €"
+       )
+       self.reservation_details_label = f"{trip_details}"
 
     def display_cabin_images(self, row_data):
         self.clear_layout(self.cabin_layout)
@@ -938,25 +980,7 @@ class VoyageApp(QMainWindow):
             separator.setFrameShadow(QFrame.Sunken)
             self.cabin_layout.addWidget(separator)
 
-    def update_payment_page(self, cabin_type, cabin_price):
-        """
-        Update payment page details with selected cabin and price.
-        """
-        # Update cabin details label
-        try:
-            # Mettre à jour les détails de la cabine
-            self.cabin_details_label.setText(
-                f"<b>Selected Cabin:</b> {cabin_type}<br>"
-                f"<b>Price:</b> {self.selected_cabin_price} €"
 
-                #f"<b>Price:</b> {cabin_price} €"
-            )
-
-            # Mettre à jour le prix total
-            self.total_price_label.setText(f"Total Price: {cabin_price} €")
-            print(f"Payment page updated for cabin: {cabin_type}, price: {cabin_price} €")
-        except Exception as e:
-            print(f"Error in update_payment_page: {e}")
 
     def load_ship_types(self):
         """Charger les types de navires dans la barre déroulante."""
@@ -1094,6 +1118,13 @@ class VoyageApp(QMainWindow):
         self.ship_image_label.clear()  # Effacer l'image du navire sélectionné
 
         self.result_list.clear()
+        self.clear_layout(self.cabin_layout)
+        self.cabin_summary_label.setText("")
+        self.total_price_label = QLabel("Total Price: €0")
+        self.reset_dates()
+
+
+
 
     def show_error(self, message):
         QMessageBox.critical(self, "Erreur", message)
@@ -1134,18 +1165,10 @@ class VoyageApp(QMainWindow):
             for ship_type in available_ships:
                 self.ship_combo.addItem(ship_type)
 
-    def show_user_info(self):
-        """
-        Afficher la fenêtre UserInfoWindow avec les détails de l'utilisateur.
-        """
-        get_user_info(self.header_user_name_edit)
 
 
     def on_user_logo_clicked(self):
-        """
-        Méthode appelée lors du clic sur le bouton utilisateur.
-        Met à jour les informations utilisateur et affiche la page user_profil.
-        """
+
         try:
             self.update_user_profil_page()  # Met à jour la page utilisateur
             self.stacked_widget.setCurrentWidget(self.user_profil)  # Affiche la page utilisateur
@@ -1161,6 +1184,193 @@ class VoyageApp(QMainWindow):
             self.user_profil.update_user_info(user_data)  # Met à jour les labels de la page user_profil
         else:
             return None
+
+    def on_validate_date_clicked(self):
+        departure_date = self.departure_date_edit.date().toString("dd-MM-yyyy")
+        return_date = self.return_date_edit.date()
+        nights = self.selected_trip_data.get('Übernachtungen')
+        calculated_return_date = self.departure_date_edit.date().addDays(nights)
+        if return_date < calculated_return_date:
+            show_return_date_error("Invalid Return Date","The selected return date is incompatible.",f"The return date must account for the number of nights of your trip.\n"
+        f"The minimum return date should be: {calculated_return_date.toString('dd-MM-yyyy')}.")
+
+            return_date = calculated_return_date
+            self.return_date_edit.setDate(return_date)
+        return_date_str = return_date.toString("dd-MM-yyyy")
+
+        self.update_gekauft_container(departure_date, return_date_str)
+        self.reisezeit_confirm_button.setEnabled(True)
+        self.reisezeit_confirm_button.setStyleSheet(confirmbtnstyle)
+
+        print(f"Dates validées : Departure: {departure_date}, Return: {return_date}")
+
+    def on_cancel_date_clicked(self):
+        self.reset_dates()
+        self.clear_layout(self.gekauft_layout)
+        self.clear_layout(self.date_layout)
+        self.departure_date_edit.setDate(QDate(2025, 5, 1))
+        self.return_date_edit.setDate(QDate(2025, 5, 2))
+        self.stacked_widget.setCurrentWidget(self.selection_page)
+
+
+    def update_gekauft_container(self, departure_date, return_date):
+        self.clear_layout(self.date_layout)
+        self.gekauft_layout.addWidget(self.reisezeit_trip_details_label)
+        departure_label = QLabel(f"<b>Departure Date:</b> {departure_date}")
+        return_label = QLabel(f"<b>Return Date:</b> {return_date}")
+        departure_label.setStyleSheet("font-size: 16px; margin-bottom: 5px;")
+        return_label.setStyleSheet("font-size: 16px; margin-bottom: 10px;")
+        self.date_layout.addWidget(departure_label)
+        self.date_layout.addWidget(return_label)
+        self.gekauft_layout.addLayout(self.date_layout)
+        self.gekauft_scroll_area.setWidget(self.gekauft_container)
+
+    def reset_dates(self):
+
+        default_departure_date = QDate(2025, 5, 1)
+        default_return_date = QDate(2025, 5, 2)
+
+        self.departure_date_edit.setDate(default_departure_date)
+        self.return_date_edit.setDate(default_return_date)
+
+    def check_payment_fields(self):
+        """
+        Vérifie si tous les champs nécessaires sont remplis et valides, et active le bouton "Confirm Purchase".
+        """
+        street_valid = is_valid_street(self.street_input.text().strip())
+        postal_code_valid = is_valid_postcode(self.postal_code_input.text().strip())
+        phone_valid = is_valid_phone(self.phone_input.text().strip())
+
+        method = self.payment_method_combo.currentText()
+        payment_valid = False
+
+        if method == "Bank Transfer":
+            payment_valid = is_valid_bank_details(self.payment_input.text().strip())
+        elif method == "Credit Card":
+            payment_valid = (
+                    is_valid_credit_card(self.card_number_input.text().strip())
+                    and is_valid_cvv(self.cvv_input.text().strip())
+            )
+        elif method == "PayPal":
+            payment_valid = is_valid_email(self.paypal_email_input.text().strip())
+
+        if street_valid and postal_code_valid and phone_valid and payment_valid:
+            self.payment_confirm_button.setEnabled(True)
+            self.payment_confirm_button.setStyleSheet(confirmbtnstyle)
+        else:
+            self.payment_confirm_button.setEnabled(False)
+            self.payment_confirm_button.setStyleSheet(confirmbtnstyledisable)
+
+
+
+    def update_payment_fields(self):
+        """
+        Met à jour les champs dynamiques selon la méthode de paiement sélectionnée.
+        """
+
+        method = self.payment_method_combo.currentText()
+
+        # Effacer le layout dynamique
+        for i in reversed(range(self.dynamic_payment_layout.count())):
+            widget = self.dynamic_payment_layout.takeAt(i).widget()
+            if widget:
+                widget.deleteLater()
+
+        if method == "Bank Transfer":
+            self.payment_input = QLineEdit()
+            self.payment_input.setStyleSheet(loginmainstyle)
+            self.payment_input.setPlaceholderText("Enter your bank details")
+            self.dynamic_payment_layout.addWidget(QLabel("Bank Details:"))
+            self.dynamic_payment_layout.addWidget(self.payment_input)
+
+        elif method == "Credit Card":
+            self.card_number_input = QLineEdit()
+            self.card_number_input.setStyleSheet(loginmainstyle)
+            self.card_number_input.setPlaceholderText("Enter your card number")
+            self.cvv_input = QLineEdit()
+            self.cvv_input.setPlaceholderText("Enter your CVV")
+            self.cvv_input.setMaxLength(3)
+            self.dynamic_payment_layout.addWidget(QLabel("Card Number:"))
+            self.dynamic_payment_layout.addWidget(self.card_number_input)
+            self.dynamic_payment_layout.addWidget(QLabel("CVV:"))
+            self.dynamic_payment_layout.addWidget(self.cvv_input)
+
+        elif method == "PayPal":
+            self.paypal_email_input = QLineEdit()
+            self.paypal_email_input.setStyleSheet(loginmainstyle)
+            self.paypal_email_input.setPlaceholderText("Enter your PayPal email")
+            self.dynamic_payment_layout.addWidget(QLabel("PayPal Email:"))
+            self.dynamic_payment_layout.addWidget(self.paypal_email_input)
+
+        self.check_payment_fields()
+
+    def _get_booking_details(self):
+        """
+        Récupère tous les détails de la réservation à partir des champs de saisie.
+        """
+        street = self.street_input.text().strip()
+        postal_code = self.postal_code_input.text().strip()
+        phone = self.phone_input.text().strip()
+        method = self.payment_method_combo.currentText()
+        user_balance = get_user_balance(self.header_user_name_edit)
+        payment_info = ""
+
+        if method == "Bank Transfer":
+            payment_info = self.payment_input.text().strip()
+        elif method == "Credit Card":
+            payment_info = f"Card: {self.card_number_input.text().strip()}, CVV: {self.cvv_input.text().strip()}"
+        elif method == "PayPal":
+            payment_info = self.paypal_email_input.text().strip()
+
+        booking_details = {
+            "name": self.header_user_name_edit,
+            "trip_number": self.selected_trip_data["Reisenummer"],
+            "cabin_type": self.selected_cabin_type,
+            "price": int(self.selected_cabin_price),
+            "address": f"{street}, {postal_code}, Germany",
+            "phone": phone,
+            "payment_method": method,
+            "payment_info": payment_info,
+            "remaining_balance": int(user_balance - self.selected_cabin_price),
+        }
+        return booking_details
+
+    def save_as_txt(self, booking_details):
+
+        with open("bookings.txt", "a") as file:
+            file.write(f"Name: {booking_details['name']}\n")
+            file.write(f"Trip Number: {booking_details['trip_number']}\n")
+            file.write(f"Cabin Type: {booking_details['cabin_type']}\n")
+            file.write(f"Price: {booking_details['price']} €\n")
+            file.write(f"Address: {booking_details['address']}\n")
+            file.write(f"Phone: {booking_details['phone']}\n")
+            file.write(f"Payment Method: {booking_details['payment_method']}, {booking_details['payment_info']}\n")
+            file.write(f"Remaining Balance: {booking_details['remaining_balance']} €\n")
+            file.write("-" * 50 + "\n")
+
+    def on_download_booking(self):
+        """
+        Gère le téléchargement des détails de réservation en tant que fichier texte.
+        """
+        try:
+            booking_details = self._get_booking_details()
+            self.save_as_txt(booking_details)
+            QMessageBox.information(self, "Booking Downloaded", "Your booking has been successfully saved.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred while downloading: {e}")
+
+    def confirm_purchase(self):
+        """
+        Confirme la réservation, enregistre les données et passe à l'étape suivante.
+        """
+        try:
+            booking_details = self._get_booking_details()
+            self.save_as_txt(booking_details)
+            QMessageBox.information(self, "Purchase Confirmed", "Your booking has been successfully confirmed!")
+            self.stacked_widget.setCurrentWidget(self.selection_page)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred during purchase: {e}")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
