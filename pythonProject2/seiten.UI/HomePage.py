@@ -13,14 +13,14 @@ from PyQt5.QtGui import QTextCharFormat, QColor
 from styles import *
 from database_action import *
 from functionen import *
-from utiles import*
+from checking_funktion import*
 
 from user_info import UserInfoWindow
 
 
 
 
-class VoyageApp(QMainWindow):
+class TravelApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("BlauWelle")
@@ -29,25 +29,25 @@ class VoyageApp(QMainWindow):
         screen_width = screen_geometry.width()
         screen_height = screen_geometry.height()
 
-        # Redimensionner la fenêtre à 80% de la taille de l'écran
+        # Die Größe des Fensters auf 80% der Bildschirmgröße ändern
         self.resize(int(screen_width * 0.8), int(screen_height * 0.8))  # Convertir en entiers
 
-        # Définir les dimensions minimales pour éviter que la fenêtre ne devienne trop petite
+        # Mindestmaße festlegen, um zu verhindern, dass das Fenster zu klein wird
         self.setMinimumSize(800, 600)
 
 
 
-        # Charger les données Excel
+        # Excel-Daten laden
         self.data_file = "../Schiffsreisen_cleaned.xlsx"  # Remplacez par le chemin correct
         self.df = load_data(self.data_file, self)
 
-        # Définir les chemins des dossiers
+        # Ordnerpfade festlegen
         self.schiffstyp_folder = "../images/Schiffstypen"  # Types de navires
         # Sélections de l'utilisateur
         self.ship_combo = QComboBox(self)
         self.selected_cities = set()
 
-        # Initialiser l'interface
+        # Schnittstelle initialisieren
         self.init_ui()
 
 
@@ -70,7 +70,7 @@ class VoyageApp(QMainWindow):
         self.headerLayout = QHBoxLayout()
         self.headerLayout.setContentsMargins(10, 10, 10, 10)
 
-        # logo de l'application
+        # logo App
         self.header_logo_label = QLabel()
         self.header_logo_label.setFixedSize(60, 60)
         self.header_logo = QPixmap("../icon/logo_schiff.png")
@@ -89,9 +89,8 @@ class VoyageApp(QMainWindow):
         self.header_user_layout = QHBoxLayout()
         self.header_user_layout.setContentsMargins(10, 10, 10, 10)
         self.header_user_layout.setSpacing(20)
-        # Espacement flexible entre les widgets
 
-
+        # Flexible Abstände zwischen Widgets
         self.header_user_logo_btn = QPushButton()
         self.header_user_logo_btn.setIcon(QIcon("../icon/userlogo.svg"))
         self.header_user_logo_btn.setIconSize(QSize(50, 50))
@@ -188,7 +187,7 @@ class VoyageApp(QMainWindow):
 
         # MENU
 
-        # Créez les pages
+        # Erstellen Sie die Seiten
         self.stacked_widget = QStackedWidget(self)
 
         self.selection_page = QWidget()
@@ -238,12 +237,12 @@ class VoyageApp(QMainWindow):
         self.menu_payment_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.payment_page))
 
 
-        ##PAGE SELECTION
+        ##AUSWAHLSEITE
 
         selection_layout = QVBoxLayout()
 
 
-        # Section du type de mer
+        # Sektion Seetyps
         sea_selection_layout = QHBoxLayout()
         sea_selection_layout.setContentsMargins(0, 0, 0, 20)
         self.sea_combo = QComboBox()
@@ -255,7 +254,7 @@ class VoyageApp(QMainWindow):
         sea_selection_layout.addWidget(self.sea_combo)
         selection_layout.addLayout(sea_selection_layout)
 
-        # Section pour le nombre de nuits
+        # Sektion Anzahl der Nächte
         nights_layout = QHBoxLayout()
         nights_layout.setContentsMargins(0, 0, 0, 30)
 
@@ -270,7 +269,7 @@ class VoyageApp(QMainWindow):
         #selection_layout.addLayout(self.nights_spin)
         selection_layout.addLayout(nights_layout)
 
-        # Section des villes
+        # Sektion Städte
         #selection_layout = QVBoxLayout()
         city_title = QLabel("Cities: ")
        # city_title.setObjectName("city_title")
@@ -285,7 +284,7 @@ class VoyageApp(QMainWindow):
 
         #self.selection_page.setLayout(selection_layout)
 
-        # Section des types de navires
+        # Sektion Schiffstypen
         ship_selection_layout = QHBoxLayout()
         ship_selection_layout.setContentsMargins(0, 0, 0, 20)
         #self.ship_combo = QComboBox()
@@ -306,7 +305,7 @@ class VoyageApp(QMainWindow):
         ship_selection_layout.addWidget(self.ship_image_label)
         selection_layout.addLayout(ship_selection_layout)
 
-        # Boutons Réinitialiser et Rechercher
+        # Schaltflächen Zurücksetzen und Suchen
         buttons_layout = QHBoxLayout()
         buttons_layout.setContentsMargins(0, 50, 0, 80)
 
@@ -324,7 +323,7 @@ class VoyageApp(QMainWindow):
         selection_layout.addLayout(buttons_layout)
 
 
-        ##PAGE RESULT
+        ##SEITE ERGEBNIS
         self.result_layout = QVBoxLayout()
         self.result_label = QLabel("List of Trips:")
         self.result_layout.addWidget(self.result_label)
@@ -338,7 +337,7 @@ class VoyageApp(QMainWindow):
 
         self.result_page.setLayout(self.result_layout)
 
-        #PAGE CABINES
+        #SEITE KABINEN
         #self.cabintype_folder = "../images/Kabinentypen"
 
         self.cabin_layout = QVBoxLayout()
@@ -366,34 +365,34 @@ class VoyageApp(QMainWindow):
         cabin_page_layout.addWidget(back_button)
         self.cabin_page.setLayout(cabin_page_layout)
 
-        # PAGE SELECTION DE DATE
-        self.reisezeit_page_layout = QVBoxLayout()  # Layout principal pour la page
+        # SEITE DATUMSAUSWAHL
+        self.reisezeit_page_layout = QVBoxLayout()  # Hauptlayout für die Seite
 
-        # Ajouter un titre hors du scroll
+        # Titel außerhalb des Scrollens hinzufügen
         adjust_title = QLabel("<h2>Adjust Your Travel Time</h2>")
         adjust_title.setAlignment(Qt.AlignCenter)
         self.reisezeit_page_layout.addWidget(adjust_title)
 
-        # Section avec le contenu scrollable
+        # Abschnitt mit scrollbarem Inhalt
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
 
-        # Conteneur pour le contenu scrollable
+        # Container für scrollbare Inhalte
         scrollable_widget = QWidget()
         self.reisezeit_layout = QVBoxLayout(scrollable_widget)
 
-        # Ajouter des détails du voyage
+        # Reisedetails hinzufügen
         self.reisezeit_trip_details_label = QLabel()
         self.reisezeit_trip_details_label.setStyleSheet("font-size: 18px; margin-bottom: 20px;")
         self.reisezeit_layout.addWidget(self.reisezeit_trip_details_label)
 
-        # Section pour les villes
+        # Abschnitt für Städte
         self.reisezeit_layout.addWidget(QLabel("Cities:"))
         self.reisezeit_city_scroll_area = QScrollArea()
         self.reisezeit_city_scroll_area.setWidgetResizable(True)
         self.reisezeit_layout.addWidget(self.reisezeit_city_scroll_area)
 
-        # Images de type de bateau et cabine
+        # Bilder von Bootstypen und Kabinen
         self.reisezeit_ship_cabin_layout = QHBoxLayout()
         ship_layout = QVBoxLayout()
         ship_layout.addWidget(QLabel("Ship Type:"))
@@ -413,7 +412,7 @@ class VoyageApp(QMainWindow):
 
         self.reisezeit_layout.addLayout(self.reisezeit_ship_cabin_layout)
 
-        # Ajouter les sélections de dates
+        # Datumsauswahlen hinzufügen
         self.reisezeit_layout.addWidget(QLabel("Departure Date:"))
         self.departure_date_edit = QDateEdit()
         self.departure_date_edit.setStyleSheet(Datestyle)
@@ -444,10 +443,10 @@ class VoyageApp(QMainWindow):
         self.cancel_date_button.clicked.connect(self.on_cancel_date_clicked)
         date_button_layout.addWidget(self.cancel_date_button,alignment=Qt.AlignRight)
 
-        # Ajouter le layout des boutons au layout principal
+        # Das Layout der Schaltflächen zum Hauptlayout hinzufügen
         self.reisezeit_layout.addLayout(date_button_layout)
 
-        # Section pour les voyages achetés
+        # Abschnitt für gekaufte Reisen
 
         self.reisezeit_layout.addWidget(QLabel("<b>Purchased Products</b>"))
         self.gekauft_scroll_area = QScrollArea()
@@ -487,11 +486,11 @@ class VoyageApp(QMainWindow):
 
         self.reisezeit_page_layout.addLayout(button_layout)
 
-        # Configurer la page Reisezeit
+        # Seite Reisezeit einrichten
         self.reisezeit_page.setLayout(self.reisezeit_page_layout)
 
 
-        # PAGE PAYEMENT
+        # KAUF SEITE
         self.payment_layout = QVBoxLayout()
         self.payment_layout.setContentsMargins(20, 0, 20, 0)
         self.payment_layout.setSpacing(20)
@@ -503,7 +502,7 @@ class VoyageApp(QMainWindow):
         self.payment_layout.addWidget(self.payment_label)
 
 
-        # Payment Details Section
+        # Sektion Payment Details
         self.payment_details_layout = QVBoxLayout()
 
         # Add Total Price Label
@@ -514,7 +513,7 @@ class VoyageApp(QMainWindow):
         self.reservation_details_label.setStyleSheet("font-size: 16px; margin-bottom: 20px;")
         self.payment_details_layout.addWidget(self.reservation_details_label)
 
-        # Address Fields
+        # Adressfelder
         self.street_input = QLineEdit()
         self.street_input.setPlaceholderText("Enter your street")
         self.street_input.setStyleSheet(loginmainstyle)
@@ -540,7 +539,7 @@ class VoyageApp(QMainWindow):
         self.payment_details_layout.addWidget(QLabel("Phone:"))
         self.payment_details_layout.addWidget(self.phone_input)
 
-        # Payment Method Fields
+        # Felder zur Zahlungsmethode
         self.payment_method_combo = QComboBox()
         self.payment_method_combo.setStyleSheet(style_box)
         self.payment_method_combo.addItems(["Bank Transfer", "Credit Card", "PayPal"])
@@ -548,7 +547,7 @@ class VoyageApp(QMainWindow):
         self.payment_details_layout.addWidget(QLabel("Payment Method:"))
         self.payment_details_layout.addWidget(self.payment_method_combo)
 
-        # Dynamic Payment Fields
+        # Dynamische Zahlungsfelder
         self.dynamic_payment_layout = QVBoxLayout()
         self.payment_details_layout.addLayout(self.dynamic_payment_layout)
 
@@ -615,14 +614,14 @@ class VoyageApp(QMainWindow):
 
     def update_reisezeit_page(self, row_data):
         """
-        Met à jour les éléments spécifiques de la page Reisezeit.
+        Aktualisiert die spezifischen Elemente auf der Seite Reisezeit.
         """
         try:
             # Vérifiez que city_scroll_area est correctement configuré
             if self.reisezeit_city_scroll_area is None:
                 self.reisezeit_city_scroll_area = QScrollArea()
 
-            # Mettre à jour les détails du voyage
+            # Reisedetails aktualisieren
             trip_details = (
                 f"<b>Trip number:</b> {row_data['Reisenummer']}<br>"
                 f"<b>Sea:</b> {row_data['Meerart']}<br>"
@@ -635,7 +634,7 @@ class VoyageApp(QMainWindow):
             self.reisezeit_trip_details_label.setText(trip_details)
             self.apply_date_restrictions(row_data['Schiffstyp'],row_data['Übernachtungen'])
 
-            # Vider et mettre à jour les images des villes
+            # Bilder von Städten leeren und aktualisieren
             city_layout = QHBoxLayout()
             for city in row_data['Besuchte_Städte'].split(','):
                 city = city.strip()
@@ -652,14 +651,14 @@ class VoyageApp(QMainWindow):
             self.reisezeit_city_scroll_area.setWidget(city_widget)
             self.reisezeit_city_scroll_area.setFixedHeight(150)
 
-            # Mettre à jour l'image du type de bateau
+            # Bild des Schiffstyps aktualisieren
             ship_image_path = f"../images/Schiffstypen/Schiffstyp {row_data['Schiffstyp']}.jpg"
             if os.path.exists(ship_image_path):
                 self.reisezeit_ship_image_label.setPixmap(QPixmap(ship_image_path).scaled(300, 250, Qt.KeepAspectRatio))
             else:
                 self.reisezeit_ship_image_label.setText("No image available")
 
-            # Mettre à jour l'image de la cabine sélectionnée
+            # Das Bild der ausgewählten Kabine aktualisieren
             cabin_image_path = get_cabin_image_path(self.selected_cabin_type)
             if cabin_image_path:
                 self.reisezeit_cabin_image_label.setPixmap(
@@ -670,7 +669,7 @@ class VoyageApp(QMainWindow):
             print(f"Erreur lors de la mise à jour de la page Reisezeit : {e}")
 
     def apply_date_restrictions(self, ship_type, nights):
-        # Dictionnaire des jours de départ par type de navire
+        # Abfahrtstage nach Schiffstyp
         ship_departure_days = {
             'A': [1],  # Monday
             'B': [2],  # Tuesday
@@ -688,12 +687,12 @@ class VoyageApp(QMainWindow):
 
         valid_days = ship_departure_days.get(ship_type, [])
         disabled_format = QTextCharFormat()
-        disabled_format.setForeground(QColor(200, 200, 200))  # Gris pour les dates invalides
+        disabled_format.setForeground(QColor(200, 200, 200))  # Grau für ungültige Daten
 
         enabled_format = QTextCharFormat()
-        enabled_format.setForeground(QColor(0, 0, 0))  # Noir pour les dates valides
+        enabled_format.setForeground(QColor(0, 0, 0))  # Schwarz für gültige Daten
 
-        # Appliquer les restrictions sur le calendrier
+        # Einschränkungen auf den Kalender anwenden
         current_date = QDate(2025, 5, 1)
         while current_date <= QDate(2025, 10, 31):
             if current_date.dayOfWeek() not in valid_days:
@@ -709,29 +708,29 @@ class VoyageApp(QMainWindow):
             current_date = current_date.addDays(1)
     def get_filtered_results(self):
 
-            # Obtenir les valeurs des filtres
+            # Filterwerte erhalten
             df_filtered = self.df.copy()
 
-            # Filtrer par mer
+            # Nach Meer filtern
             selected_sea = self.sea_combo.currentText()
 
             if selected_sea != "All":
                 df_filtered = self.filter_by_sea(selected_sea, df_filtered)
 
-            # Filtrer par nuit si défini
+            # Nach Nacht filtern, falls festgelegt
             selected_night = self.nights_spin.value()
             if selected_night != 0:
                 df_filtered = self.filter_by_night(selected_night, df_filtered)
-            #si au moins une ville dans la colone 'Besuchte Stadte
+            #wenn mindestens eine Stadt in der Spalte „Besuchte Städte“ enthalten ist
 
-            #fiter bei
+            #fiter bei ship
             self.selected_ship = self.ship_combo.currentText()
             if self.selected_ship and self.selected_ship != "Choose a Ship":
                 df_filtered = self.filter_by_ship(self.selected_ship, df_filtered)
 
             if self.selected_cities:
                 def match_cities(cities):
-                    if not isinstance(cities, str):  # Sécurité contre les valeurs non textuelles
+                    if not isinstance(cities, str):  # Sicherheit vor nicht-textuellen Werten
                         return False
                     return any(city.strip() in self.selected_cities for city in cities.split(","))
 
@@ -803,21 +802,19 @@ class VoyageApp(QMainWindow):
         self.result_label.setText("Results found:")
 
     def on_pay_clicked(self, cabin_type, cabin_price, row_data):
-        """
-        Méthode appelée lorsque le bouton 'Pay' est cliqué.
-        """
+        """     Methode, die aufgerufen wird, wenn auf die Schaltfläche 'Bezahlen' geklickt wird.        """
         try:
-            # Stocker la cabine sélectionnée et son prix
+            # Speichern Sie die ausgewählte Kabine und ihren Preis
             self.selected_cabin_type = cabin_type
             self.selected_cabin_price = cabin_price
             self.selected_trip_data = row_data
 
             self.total_price_label.setText(f"Total Price: €{cabin_price}")
 
-            # Mettre à jour la page Reisezeit
+            # Seite Reisezeit aktualisieren
             self.update_reisezeit_page(row_data)
 
-            # Naviguer vers la page Reisezeit
+            # Zur Seite Reisezeit navigieren
             self.stacked_widget.setCurrentWidget(self.reisezeit_page)
 
         except Exception as e:
@@ -835,9 +832,9 @@ class VoyageApp(QMainWindow):
         self.stacked_widget.setCurrentWidget(self.cabin_page)
 
     def clear_layout(self, layout):
-        """Supprime tous les widgets d'un layout."""
-        if layout is not None:  # Vérifie que le layout n'est pas None
-            while layout.count():  # Vérifie s'il contient des widgets
+        """Löscht alle Widgets eines Layouts."""
+        if layout is not None:
+            while layout.count():  # Überprüft, ob er Widgets enthält
                 child = layout.takeAt(0)
                 if child.widget():
                     child.widget().deleteLater()
@@ -850,11 +847,10 @@ class VoyageApp(QMainWindow):
         self.stacked_widget.setCurrentWidget(self.result_page)
 
     def on_choose_button_clicked(self, row_data):
-        """Gère la sélection d'un voyage par l'utilisateur."""
-        # Afficher un message de confirmation
-        # Afficher les images des cabines pour ce voyage
-        #self.clear_layout(self.cabin_layout)
-        #self.update_user_choise(row_data)
+        """Verwaltet die Auswahl einer Reise durch den Nutzer."""
+        # Zeige eine Bestätigungsnachricht
+        # Zeige Bilder der Kabinen für diese Reise
+
         self.selected_cabin_type = None
 
         trip_details = (
@@ -900,8 +896,8 @@ class VoyageApp(QMainWindow):
         user_balance = get_user_balance(self.header_user_name_edit.text())  # Get user balance dynamically
 
         for cabin_type, description in cabin_details.items():
-            cabin_price = row_data.get(cabin_type, "not available")  # Retrieve cabin price or "not available"
-            image_path = get_cabin_image_path(cabin_type)  # Retrieve the image path for the cabin
+            cabin_price = row_data.get(cabin_type, "not available")  # Kabinenpreis abrufen oder „nicht verfügbar“
+            image_path = get_cabin_image_path(cabin_type)  # Abrufen des Bildpfads für die Kabine
 
             # Display cabin image and information
             cabin_layout = QHBoxLayout()
@@ -983,7 +979,7 @@ class VoyageApp(QMainWindow):
 
 
     def load_ship_types(self):
-        """Charger les types de navires dans la barre déroulante."""
+        """Laden Sie die Schiffstypen in die Dropdownleiste."""
         if not os.path.exists(self.schiffstyp_folder):
             self.ship_combo.addItem("No ship available")
             return
@@ -1004,18 +1000,18 @@ class VoyageApp(QMainWindow):
             path = os.path.join(self.schiffstyp_folder, f"Schiffstyp {ship_name}{ext}")
             if os.path.exists(path):
                 image_path = path
-                break  # Trouvé, on sort de la boucle
-        # Si aucune image trouvée, retourner sans rien faire
+                break
+
         if not image_path:
             return
-        # Charger et afficher l'image
+        # Bild laden und anzeigen
         pixmap = QPixmap(image_path).scaled(300, 250, Qt.KeepAspectRatio)
         self.ship_image_label.setPixmap(pixmap)
 
     def create_city_selection(self):
         """
-        Crée la section de sélection des villes avec des boutons image.
-        Les villes sont générées dynamiquement en fonction des résultats filtrés.
+        Erstellt den Abschnitt zur Auswahl von Städten mit Bildschaltflächen.
+        Die Städte werden dynamisch anhand der gefilterten Ergebnisse generiert.
         """
         grid_layout = QGridLayout()
         row, col = 0, 0
@@ -1023,12 +1019,12 @@ class VoyageApp(QMainWindow):
         df_filtered = self.get_filtered_results()
         print(df_filtered)
 
-        # Extraire les villes uniques
+        # Einzigartige Städte extrahieren
         unique_cities = df_filtered["Besuchte_Städte"].dropna().unique()
         cities = set(city.strip() for cities in unique_cities for city in cities.split(","))
 
         for city in sorted(cities):
-            # Créer un bouton image
+            # Erstellen einer Bildschaltfläche
             btn = QPushButton()
             btn.setCheckable(True)
             btn.setStyleSheet(city_section_style)
@@ -1038,84 +1034,83 @@ class VoyageApp(QMainWindow):
             btn.setIconSize(QSize(300, 250))  # Taille de l'image
             btn.setStyleSheet(city_section_style)
 
-            # Ajouter un événement de clic
             btn.clicked.connect(lambda _, c=city, b=btn: self.toggle_city_selection(c, b))
 
-            # Ajouter un label sous le bouton
+            # Ein Label unter der Schaltfläche hinzufügen
             city_layout = QVBoxLayout()
             city_layout.addWidget(btn)
             city_label = QLabel(city)
             city_label.setAlignment(Qt.AlignCenter)
             city_layout.addWidget(city_label)
 
-            # Conteneur pour chaque ville
+            # Container für jede Stadt
             city_widget = QWidget()
             city_widget.setLayout(city_layout)
 
-            # Ajouter à la grille
+            # Zum Raster hinzufügen
             grid_layout.addWidget(city_widget, row, col)
             col += 1
             if col > 3:  # 4 colonnes max
                 col = 0
                 row += 1
 
-        # Retourner le conteneur
+        # Container zuruckgeben
         scroll_widget = QWidget()
         scroll_widget.setLayout(grid_layout)
         return scroll_widget
 
     def on_filters_changed(self):
         """
-        Méthode appelée lorsque les filtres (mer, nuits, villes) changent.
-        Actualise l'affichage des villes et des types de bateaux.
+        Methode, die aufgerufen wird, wenn sich die Filter (Meer, Nächte, Städte) ändern.
+        Aktualisiert die Anzeige von Städten und Schiffstypen.
         """
         try:
-            print("Filtres modifiés, mise à jour des villes et des bateaux...")
+            print("Geänderte Filter, aktualisierte Städte und Schiffe...")
 
-            # Actualiser les villes
+            # Städte aktualisieren
             self.city_scroll_area.takeWidget()
             self.city_selection_widget = self.create_city_selection()
             self.city_scroll_area.setWidget(self.city_selection_widget)
 
-            print("Villes mises à jour")
+            print("Aktualisierte Städte")
             filtered_results = self.get_filtered_results()
             self.display_result_table(filtered_results)
 
-            # Actualiser les types de navires
+            # Schiffstypen aktualisieren
             self.update_ship_types()
 
         except Exception as e:
-            print(f"Erreur lors de la mise à jour des filtres : {e}")
+            print(f"Fehler beim Aktualisieren von Filtern : {e}")
 
     def toggle_city_selection(self, city_name, btn):
-        """Ajouter ou retirer une ville de la sélection et mettre à jour l'apparence."""
+        """Eine Stadt zur Auswahl hinzufügen oder entfernen und das Erscheinungsbild aktualisieren."""
         if btn.isChecked():
             self.selected_cities.add(city_name)
         else:
             self.selected_cities.remove(city_name)
         self.update_ship_types()
 
-        print(f"Villes sélectionnées : {self.selected_cities}")
+        print(f"Ausgewählte Städte : {self.selected_cities}")
 
     def reset_form(self):
-        """Réinitialiser tous les choix du formulaire."""
-        # Réinitialiser la sélection des mers
+        """Alle Auswahlmöglichkeiten des Formulars zurücksetzen."""
+        # Die Auswahl der Meere zurücksetzen
         self.sea_combo.setCurrentIndex(0)
 
-        # Réinitialiser le nombre de nuits
+        # Anzahl der Nächte zurücksetzen
         self.nights_spin.setSpecialValueText("undefine")
         self.nights_spin.setValue(0)
 
-        # Réinitialiser la sélection des villes
+        # Die Auswahl der Städte zurücksetzen
         self.selected_cities.clear()
         for btn in self.findChildren(QPushButton):
             if btn.isCheckable():
                 btn.setChecked(False)
                 btn.setStyleSheet("border: 1px solid black; background-color: none;")
 
-        # Réinitialiser la sélection des types de navires
+        # Auswahl der Schiffstypen zurücksetzen
         self.ship_combo.setCurrentIndex(0)
-        self.ship_image_label.clear()  # Effacer l'image du navire sélectionné
+        self.ship_image_label.clear()
 
         self.result_list.clear()
         self.clear_layout(self.cabin_layout)
@@ -1140,10 +1135,10 @@ class VoyageApp(QMainWindow):
             dataframe["Schiffstyp"].str.contains(selected_ship, na=False, case=False)]
 
     def filter_by_night(self, selected_night, dataframe):
-        min_nuits = max(1, selected_night - 2)  # Minimum de 1 pour éviter les valeurs négatives
+        min_nuits = max(1, selected_night - 2)  # Minimum von 1, um negative Werte zu vermeiden
         max_nuits = selected_night + 2
 
-        # Filtrer le DataFrame en fonction de la plage
+        # DataFrame nach Bereich filtern
         dataframe_filtre = dataframe[
             (dataframe["Übernachtungen"] >= min_nuits) &
             (dataframe["Übernachtungen"] <= max_nuits)
@@ -1152,14 +1147,14 @@ class VoyageApp(QMainWindow):
         return dataframe_filtre
 
     def update_ship_types(self):
-        """Met à jour les types de bateaux dans le combo en fonction des filtres."""
-        filtered_results = self.get_filtered_results()  # Toujours récupérer les résultats filtrés
+        """Aktualisiert die Bootstypen in der Combo entsprechend den Filtern."""
+        filtered_results = self.get_filtered_results()
         available_ships = filtered_results["Schiffstyp"].dropna().unique()
 
         self.ship_combo.clear()
         self.ship_combo.addItem("Choose a Ship")
 
-        if not available_ships.size:  # Vérifie si la liste est vide
+        if not available_ships.size:  # Prüft, ob die Liste leer ist
             self.ship_combo.addItem("No ship available")
         else:
             for ship_type in available_ships:
@@ -1170,18 +1165,18 @@ class VoyageApp(QMainWindow):
     def on_user_logo_clicked(self):
 
         try:
-            self.update_user_profil_page()  # Met à jour la page utilisateur
-            self.stacked_widget.setCurrentWidget(self.user_profil)  # Affiche la page utilisateur
+            self.update_user_profil_page()  # Aktualisiert die Benutzerseite
+            self.stacked_widget.setCurrentWidget(self.user_profil)  # Zeigt die Benutzerseite an
         except Exception :
             return None
 
     def update_user_profil_page(self):
         """
-        Met à jour les informations utilisateur sur la page user_profil.
+        Aktualisiert die Benutzerinformationen auf der Seite user_profil
         """
-        user_data = get_user_info(self.header_user_name_edit)  # Récupère les informations utilisateur
+        user_data = get_user_info(self.header_user_name_edit)
         if user_data:
-            self.user_profil.update_user_info(user_data)  # Met à jour les labels de la page user_profil
+            self.user_profil.update_user_info(user_data)
         else:
             return None
 
@@ -1235,7 +1230,7 @@ class VoyageApp(QMainWindow):
 
     def check_payment_fields(self):
         """
-        Vérifie si tous les champs nécessaires sont remplis et valides, et active le bouton "Confirm Purchase".
+        Überprüfe, ob alle notwendigen Felder ausgefüllt und gültig sind, und aktiviere die Schaltfläche „Confirm Purchase".
         """
         street_valid = is_valid_street(self.street_input.text().strip())
         postal_code_valid = is_valid_postcode(self.postal_code_input.text().strip())
@@ -1265,7 +1260,7 @@ class VoyageApp(QMainWindow):
 
     def update_payment_fields(self):
         """
-        Met à jour les champs dynamiques selon la méthode de paiement sélectionnée.
+        Aktualisiert die dynamischen Felder entsprechend der ausgewählten Zahlungsmethode.
         """
 
         method = self.payment_method_combo.currentText()
@@ -1306,7 +1301,7 @@ class VoyageApp(QMainWindow):
 
     def _get_booking_details(self):
         """
-        Récupère tous les détails de la réservation à partir des champs de saisie.
+        Ruft alle Buchungsdetails aus den Eingabefeldern ab.
         """
         street = self.street_input.text().strip()
         postal_code = self.postal_code_input.text().strip()
@@ -1350,7 +1345,7 @@ class VoyageApp(QMainWindow):
 
     def on_download_booking(self):
         """
-        Gère le téléchargement des détails de réservation en tant que fichier texte.
+        Verwaltet das Hochladen von Buchungsdetails als Textdatei.
         """
         try:
             booking_details = self._get_booking_details()
@@ -1361,7 +1356,7 @@ class VoyageApp(QMainWindow):
 
     def confirm_purchase(self):
         """
-        Confirme la réservation, enregistre les données et passe à l'étape suivante.
+        Bestätigt die Buchung, speichert die Daten und geht zum nächsten Schritt über..
         """
         try:
             booking_details = self._get_booking_details()
@@ -1371,9 +1366,3 @@ class VoyageApp(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred during purchase: {e}")
 
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = VoyageApp()
-    window.show()
-    sys.exit(app.exec_())

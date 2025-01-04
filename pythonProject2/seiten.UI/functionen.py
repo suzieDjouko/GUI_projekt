@@ -6,11 +6,11 @@ from PyQt5.QtWidgets import QMessageBox, QGridLayout, QPushButton, QVBoxLayout, 
 
 
 def load_data(file_path, parent_widget):
-    """Charger les données depuis le fichier Excel."""
+    """Daten aus der Excel-Datei laden."""
     try:
         df = pd.read_excel(file_path)
 
-        # Vérifier la présence des colonnes nécessaires
+        # Überprüfen Sie, ob die notwendigen Spalten vorhanden sind
         expected_columns = [
             "Meerart", "Übernachtungen", "Besuchte_Städte", "Schiffstyp",
             "Innenkabine", "Aussenkabine", "Balkonkabine",
@@ -18,26 +18,26 @@ def load_data(file_path, parent_widget):
         ]
         missing_columns = [col for col in expected_columns if col not in df.columns]
         if missing_columns:
-            parent_widget.show_error(f"Colonnes manquantes : {', '.join(missing_columns)}")
+            parent_widget.show_error(f"Fehlende Spalten : {', '.join(missing_columns)}")
             return None
 
-        # Nettoyage des données
+        # Bereinigung der Daten
         df = df.dropna(how='all')
         for col in ["Innenkabine", "Aussenkabine", "Balkonkabine", "Luxuskabine1", "Luxuskabine2", "Luxuskabine3"]:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col].replace("nicht vorhanden", 0), errors='coerce').fillna(0).astype(int)
         return df
     except FileNotFoundError:
-        parent_widget.show_error(f"Fichier introuvable : {file_path}")
+        parent_widget.show_error(f"Datei nicht gefunden : {file_path}")
     except Exception as e:
-        parent_widget.show_error(f"Impossible de charger les données : {e}")
+        parent_widget.show_error(f"Daten können nicht geladen werden : {e}")
     return None
 
 def filter_by_sea(selected_sea, dataframe):
     return dataframe if selected_sea == "All" else dataframe[dataframe["Meerart"] == selected_sea]
 
 def filter_by_night( selected_night, dataframe):
-        min_nuits = max(1, selected_night - 2)  # Minimum de 1 pour éviter les valeurs négatives
+        min_nuits = max(1, selected_night - 2)  # Minimum von 1, um negative Werte zu vermeiden
         max_nuits = selected_night + 2
         return dataframe[
             (dataframe["Übernachtungen"] >= min_nuits) &
@@ -49,7 +49,7 @@ def filter_by_ship(selected_ship, dataframe):
     ]
 
 def get_filtered_results(selected_sea, selected_night, selected_ship, selected_cities, dataframe):
-    """Apply all filters to the dataframe."""
+    """Alle Filter auf den Datenrahmen anwenden."""
     filtered_df = filter_by_sea(selected_sea, dataframe)
     filtered_df = filter_by_night(selected_night, filtered_df)
     filtered_df = filter_by_ship(selected_ship, filtered_df)
@@ -80,7 +80,7 @@ def get_cabin_image_path(cabin_type):
 
 def update_payment_page(cabin_type, cabin_price, cabin_details_label, total_price_label):
     """
-    Update payment page details with selected cabin and price.
+    Aktualisieren Sie die Details der Zahlungsseite mit der ausgewählten Kabine und dem Preis.
     """
     cabin_details_label.setText(
         f"<b>Selected Cabin:</b> {cabin_type}<br>"
@@ -90,7 +90,7 @@ def update_payment_page(cabin_type, cabin_price, cabin_details_label, total_pric
 
 
 def load_ship_types(folder_path, ship_combo):
-    """Load ship types into the combo box."""
+    """Schiffstypen in das Kombinationsfeld laden."""
     if not os.path.exists(folder_path):
         ship_combo.addItem("No ship available")
         return
@@ -102,7 +102,7 @@ def load_ship_types(folder_path, ship_combo):
 
 
 def display_selected_ship_image(ship_name, folder_path, ship_image_label):
-    """Display the image of the selected ship."""
+    """Anzeige des Bildes des ausgewählten Schiffes."""
     extensions = [".jpeg", ".JPG"]
     image_path = None
 
@@ -121,7 +121,7 @@ def display_selected_ship_image(ship_name, folder_path, ship_image_label):
 
 def create_city_selection(filtered_df, city_section_style, toggle_city_selection_callback):
     """
-    Create the city selection section dynamically based on filtered results.
+    Erstellen Sie den Stadtauswahlbereich dynamisch auf der Grundlage der gefilterten Ergebnisse.
     """
     grid_layout = QGridLayout()
     row, col = 0, 0

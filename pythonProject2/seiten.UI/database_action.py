@@ -19,7 +19,7 @@ import sqlite3
 
 def update_user_balance(username, new_balance):
     """
-    Met à jour le solde de l'utilisateur dans la base de données.
+    Aktualisiert den Kontostand des Nutzers in der Datenbank.
     """
     try:
         conn = sqlite3.connect('User.sqlite')  # Chemin vers votre base de données SQLite
@@ -28,13 +28,13 @@ def update_user_balance(username, new_balance):
         conn.commit()
         conn.close()
     except Exception as e:
-        print(f"Erreur lors de la mise à jour du solde : {e}")
+        print(f"Fehler bei der Aktualisierung des Saldos : {e}")
         raise
 
 def get_user_info(header_user_name_edit):
         """
-        Récupérer les informations utilisateur depuis la base de données.
-        Adaptez cette méthode en fonction de la structure de votre base de données.
+        Rufen Sie die Benutzerinformationen aus der Datenbank ab.
+        Passen Sie diese Methode an die Struktur Ihrer Datenbank an.
         """
         try:
             username = header_user_name_edit.text()

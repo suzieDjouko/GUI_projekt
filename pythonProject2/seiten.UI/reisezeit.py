@@ -22,7 +22,7 @@ class ReisezeitPage(QWidget):
         dataframe = self.get_filtered_results()
 
 
-        # Titre
+        # Title
         title_label = QLabel("Choose Your Travel Dates and Explore Cities")
         title_label.setAlignment(Qt.AlignCenter)
         title_label.setStyleSheet("font-size: 24px; font-weight: bold; margin-bottom: 20px;")
@@ -34,7 +34,7 @@ class ReisezeitPage(QWidget):
         layout.addWidget(self.carousel_widget)
 
 
-        # Date de départ
+        # Datum der Abreise
         layout.addWidget(QLabel("Departure Date:"))
         self.departure_date_edit = QDateEdit()
         self.departure_date_edit.setCalendarPopup(True)
@@ -43,7 +43,7 @@ class ReisezeitPage(QWidget):
         self.departure_date_edit.dateChanged.connect(self.on_departure_date_changed)
         layout.addWidget(self.departure_date_edit)
 
-        # Date de retour
+        # Datum der Rückkehr
         layout.addWidget(QLabel("Return Date:"))
         self.return_date_edit = QDateEdit()
         self.return_date_edit.setCalendarPopup(True)
@@ -51,10 +51,10 @@ class ReisezeitPage(QWidget):
         self.return_date_edit.setMaximumDate(QDate(2025, 10, 31))
         layout.addWidget(self.return_date_edit)
 
-        # Section pour le carrousel
-         # Remplit le carrousel avec les villes filtrées
+        # Abschnitt für das Karussell
+        # Füllt das Karussell mit den gefilterten Städten.
 
-        # Défilement automatique
+        # Automatisches Scrollen
         self.carousel_timer = QTimer(self)
         self.carousel_timer.timeout.connect(self.show_next_city)
         self.carousel_timer.start(3000)  # Change d'image toutes les 3 secondes
@@ -73,13 +73,11 @@ class ReisezeitPage(QWidget):
 
     def populate_carousel(self, filtered_results):
         """
-        Ajoute les images des villes filtrées dans le carrousel.
+        Fügt die Bilder der gefilterten Städte dem Karussell hinzu.
         """
-        #filtered_results = self.get_filtered_results()  # Obtenir les résultats filtrés
         visited_cities = filtered_results["Besuchte_Städte"].dropna().unique()
         cities = set(city.strip() for cities in visited_cities for city in cities.split(","))
 
-        # Extensions possibles
         extensions = [".jpg", ".JPG", ".jpeg"]
 
         for city in sorted(cities):
@@ -87,7 +85,6 @@ class ReisezeitPage(QWidget):
             city_label.setAlignment(Qt.AlignCenter)
             image_path = None
 
-            # Recherche une image avec une extension valide
             for ext in extensions:
                 potential_path = f"../images/Hafenstaedte/{city}{ext}"
                 if os.path.exists(potential_path):
@@ -104,7 +101,7 @@ class ReisezeitPage(QWidget):
 
     def show_next_city(self):
         """
-        Passe à l'image suivante dans le carrousel.
+        Springt zum nächsten Bild im Karussell.
         """
         current_index = self.carousel_widget.currentIndex()
         next_index = (current_index + 1) % self.carousel_widget.count()
@@ -112,13 +109,13 @@ class ReisezeitPage(QWidget):
 
     def on_departure_date_changed(self, date):
         """
-        Ajuste les options pour la date de retour en fonction de la date de départ.
+        Passt die Optionen für das Rückreisedatum an das Abreisedatum an.
         """
-        self.return_date_edit.setMinimumDate(date.addDays(1))  # La date de retour doit être au moins 1 jour plus tard
+        self.return_date_edit.setMinimumDate(date.addDays(1))  # Das Rückreisedatum muss mindestens 1 Tag später liegen
 
     def confirm_selection(self):
         """
-        Confirme les dates sélectionnées.
+        Bestätigt die gewählten Daten.
         """
         departure_date = self.departure_date_edit.date().toString("yyyy-MM-dd")
         return_date = self.return_date_edit.date().toString("yyyy-MM-dd")
@@ -132,10 +129,10 @@ class ReisezeitPage(QWidget):
             "Confirmation",
             f"Dates confirmed:\nDeparture: {departure_date}\nReturn: {return_date}"
         )
-        self.stacked_widget.setCurrentWidget(self.payment_page)  # Naviguer vers la page de paiement
+        self.stacked_widget.setCurrentWidget(self.payment_page)  # Zur Zahlungsseite navigieren
 
     def go_back(self):
         """
-        Retourne à la page précédente.
+        Kehrt zur vorherigen Seite zurück.
         """
         self.stacked_widget.setCurrentWidget(self.cabin_page)

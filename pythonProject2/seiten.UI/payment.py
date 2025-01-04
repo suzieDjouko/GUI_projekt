@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox, QHBoxLayout, QComboBox
 
 from styles import *
-from utiles import *
+from checking_funktion import *
 class PurchaseDialog(QDialog):
     def __init__(self, trip_data, cabin_type, cabin_price, user_balance , user_name, parent=None):
         super().__init__(parent)
@@ -19,7 +19,7 @@ class PurchaseDialog(QDialog):
         layout = QVBoxLayout()
         layout.setSpacing(20)
 
-        # Résumé des informations de réservation
+        # Zusammenfassung der Buchungsinformationen
         layout.addWidget(QLabel(f"<b>Trip Number:</b> {trip_data['Reisenummer']}"))
         layout.addWidget(QLabel(f"<b>Cabin Type:</b> {cabin_type}"))
         layout.addWidget(QLabel(f"<b>Price:</b> {int(cabin_price)} €"))
@@ -27,7 +27,7 @@ class PurchaseDialog(QDialog):
         layout.addWidget(QLabel(f"<b>Remaining Balance:</b> {int(user_balance - cabin_price)} €<br>"))
 
 
-        # Champs pour les données utilisateur
+        # Felder für Benutzerdaten
         self.street_input = QLineEdit()
         self.street_input.setPlaceholderText("Enter your street")
         self.street_input.setStyleSheet(loginmainstyle)
@@ -53,7 +53,7 @@ class PurchaseDialog(QDialog):
         layout.addWidget(QLabel("Phone:"))
         layout.addWidget(self.phone_input)
 
-        # Sélection de la méthode de paiement
+        # Auswahl der Zahlungsmethode
         self.payment_method_combo = QComboBox()
         self.payment_method_combo.setStyleSheet(style_box)
         self.payment_method_combo.addItems(["Bank Transfer", "Credit Card", "PayPal"])
@@ -61,7 +61,7 @@ class PurchaseDialog(QDialog):
         layout.addWidget(QLabel("Payment Method:"))
         layout.addWidget(self.payment_method_combo)
 
-        # Champs dynamiques pour les informations de paiement
+        # Dynamische Felder für Zahlungsinformationen
         self.dynamic_payment_layout = QVBoxLayout()
         self.payment_input = QLineEdit()
         self.payment_input.setStyleSheet(loginmainstyle)
@@ -83,7 +83,7 @@ class PurchaseDialog(QDialog):
 
         layout.addLayout(self.dynamic_payment_layout)
 
-        # Boutons pour confirmer ou annuler l'achat
+        # Buttons, um den Kauf zu bestätigen oder abzubrechen
         button_layout = QHBoxLayout()
 
         self.cancel_button = QPushButton("Cancel")
@@ -108,11 +108,11 @@ class PurchaseDialog(QDialog):
 
     def update_payment_fields(self):
         """
-        Met à jour les champs affichés en fonction de la méthode de paiement choisie.
+        Aktualisiert die angezeigten Felder entsprechend der gewählten Zahlungsmethode.
         """
         method = self.payment_method_combo.currentText()
 
-        # Effacer le layout dynamique
+        # Dynamisches Layout löschen
         for i in reversed(range(self.dynamic_payment_layout.count())):
             widget = self.dynamic_payment_layout.takeAt(i).widget()
             if widget is not None:
@@ -143,7 +143,7 @@ class PurchaseDialog(QDialog):
 
     def check_fields(self):
         """
-        Vérifie si tous les champs nécessaires sont remplis et valides, et active le bouton "Confirm".
+        Überprüft, ob alle notwendigen Felder ausgefüllt und gültig sind, und aktiviert die Schaltfläche „Confirm“..
         """
         street_valid = is_valid_street(self.street_input.text().strip())
         postal_code_valid = is_valid_postcode(self.postal_code_input.text().strip())
@@ -169,7 +169,7 @@ class PurchaseDialog(QDialog):
             self.confirm_button.setEnabled(False)
 
     def confirm_purchase(self):
-        #strip supprimes les expaces unitiles au debut et  a la fin
+        #strip entfernt einseitige Ausdrücke am Anfang und am Ende
         street = self.street_input.text().strip()
         postal_code = self.postal_code_input.text().strip()
         phone = self.phone_input.text().strip()
@@ -186,5 +186,5 @@ class PurchaseDialog(QDialog):
             file.write("-" * 50 + "\n")
         QMessageBox.information(self, "Purchase Successful", "Your booking has been confirmed!")
 
-        # Fermez le dialogue avec succès
+        # Schließen Sie den Dialog erfolgreich ab
         self.accept()

@@ -67,9 +67,7 @@ def show_warning_message(title , message):
                 """)
     warning_box.exec_()
 def show_return_date_error(title, mess,info):
-    """
-    Affiche un message d'erreur si la date de retour est incompatible.
-    """
+    """   Zeigt eine Fehlermeldung an, wenn das Rückgabedatum inkompatibel ist.    """
     message = QMessageBox()
     message.setIcon(QMessageBox.Warning)
     message.setWindowTitle(title)
@@ -130,7 +128,7 @@ def show_success_message(title, message):
 
 def download_booking_file(self):
     """
-    Allows the user to download the booking file.
+    Ermöglicht dem Benutzer das Herunterladen der Buchungsdatei
     """
     try:
         # Path to the existing booking file

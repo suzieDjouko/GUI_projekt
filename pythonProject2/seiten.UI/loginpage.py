@@ -3,8 +3,8 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QLabel, QLineEdit, QPushB
     QVBoxLayout, QHBoxLayout, QFrame, QFormLayout, QSizePolicy, QSpacerItem
 from PyQt5.QtGui import QPixmap
 
-from HomePage import VoyageApp
-from utiles import show_success_message ,show_warning_message , is_valid_email
+from HomePage import TravelApp
+from checking_funktion import show_success_message ,show_warning_message , is_valid_email
 from database_action import *
 from styles import *
 import sqlite3
@@ -37,20 +37,21 @@ class LoginRegisterPage(QMainWindow):
         screen_width = screen_geometry.width()
         screen_height = screen_geometry.height()
 
-        # Redimensionner la fenêtre à 60% de la taille de l'écran
-        self.resize(int(screen_width * 0.5), int(screen_height * 0.7))  # Convertir en entiers
+        # Die Größe des Fensters Bildschirmgröße ändern
+        self.resize(int(screen_width * 0.5), int(screen_height * 0.7))  # In ganze Zahlen umwandeln
 
-        # Définir les dimensions minimales pour éviter que la fenêtre ne devienne trop petite
+        # Mindestmaße festlegen, um zu verhindern, dass das Fenster zu klein wird
         self.setMinimumSize(800, 600)
         self.setStyleSheet(loginmainstyle)
 
-        # Créer un widget central
+        # Erstellen eines zentralen Widgets
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.main_layout = QVBoxLayout(self.central_widget)
         self.main_layout.setContentsMargins(50, 50, 50, 50)
         self.main_layout.setSpacing(50)
-        # Titre
+
+        # Title
         self.title = QLabel("Willkommen! Bitte anmelden oder registrieren")
         self.title.setAlignment(QtCore.Qt.AlignCenter)
         self.title.setStyleSheet(logintitlestyle)
@@ -65,7 +66,7 @@ class LoginRegisterPage(QMainWindow):
         self.image_label.setStyleSheet(loginimagestyle)
         self.main_layout.addWidget(self.image_label)
 
-        #Formalar
+        #Formular
         self.form_layout = QFormLayout()
         self.form_layout.setContentsMargins(20, 20, 20, 20)
         self.form_layout.setSpacing(20)
@@ -106,6 +107,7 @@ class LoginRegisterPage(QMainWindow):
         self.register_prompt_btn = QPushButton("Noch  kein Konto? Jetzt registrieren")
         self.register_prompt_btn.setStyleSheet(registerpromptstyle)
         self.register_prompt_btn.clicked.connect(self.show_registration_form)
+
         # Registrieren-Button
         self.register_button = QPushButton("Registrieren")
         self.register_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -166,7 +168,7 @@ class LoginRegisterPage(QMainWindow):
             self.password_input.clear()
 
 
-            self.main_page = VoyageApp()
+            self.main_page = TravelApp()
             self.main_page.header_user_name_edit.setText(f"{username}")
             self.main_page.kontostand_amont_edit.setText(f"{new_kontostand}€")
             #self.main_page.set_current_user(user_id, username, new_kontostand)
@@ -224,14 +226,3 @@ class LoginRegisterPage(QMainWindow):
 
         self.username_input.clear()
         self.password_input.clear()
-
-
-def main():
-    app = QApplication(sys.argv)
-    window = LoginRegisterPage()
-    window.show()
-    sys.exit(app.exec_())
-
-
-if __name__ == "__main__":
-    main()

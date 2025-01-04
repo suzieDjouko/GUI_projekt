@@ -8,20 +8,20 @@ class UserInfoWindow(QWidget):
         self.setWindowTitle("User Profile")
         self.setMinimumSize(500, 400)
 
-        # Callback pour retourner à la page précédente
+        # Callback, um zur vorherigen Seite zurückzukehren
         self.return_callback = return_callback
 
         # Layout principal
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
 
-        # Header section
+        # Header sektion
         self.header_label = QLabel("User Profile")
         self.header_label.setAlignment(Qt.AlignCenter)
         self.header_label.setStyleSheet("font-size: 24px; font-weight: bold; margin-bottom: 20px;")
         self.main_layout.addWidget(self.header_label)
 
-        # Information utilisateur
+        # Benutzerinformationen
         self.info_layout = QVBoxLayout()
 
         self.user_id_label = QLabel("User ID:")
@@ -40,19 +40,19 @@ class UserInfoWindow(QWidget):
         self.kontostand_label.setAlignment(Qt.AlignLeft)
         self.kontostand_label.setStyleSheet("font-size: 16px; margin-bottom: 10px;")
 
-        # Ajouter les labels au layout des informations
+        # Labels zum Informationslayout hinzufügen
         self.info_layout.addWidget(self.user_id_label)
         self.info_layout.addWidget(self.username_label)
         self.info_layout.addWidget(self.email_label)
         self.info_layout.addWidget(self.kontostand_label)
 
-        # Ajouter un QFrame pour un style visuel
+        # QFrame für einen visuellen Stil hinzufügen
         info_frame = QFrame()
         info_frame.setLayout(self.info_layout)
         info_frame.setStyleSheet("border: 1px solid #ccc; padding: 10px; border-radius: 8px;")
         self.main_layout.addWidget(info_frame)
 
-        # Spacer pour équilibrer les éléments
+        # Spacer zum Ausbalancieren der Elemente
         self.main_layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
 
         # Bouton Quit
@@ -83,8 +83,8 @@ class UserInfoWindow(QWidget):
 
     def update_user_info(self, user_data):
         """
-        Met à jour les informations utilisateur affichées sur la page.
-        :param user_data: dict contenant les informations utilisateur.
+        Aktualisiert die auf der Seite angezeigten Benutzerinformationen.
+        :param user_data: Dict, der die Benutzerinformationen enthält.
         """
         self.user_id_label.setText(f"User ID: {user_data.get('id', '')}")
         self.username_label.setText(f"Username: {user_data.get('username', '')}")
