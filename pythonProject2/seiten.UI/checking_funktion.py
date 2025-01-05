@@ -4,9 +4,6 @@ from PyQt5.QtWidgets import QMessageBox, QFileDialog
 import re
 from PyQt5.QtGui import QPixmap
 
-def resize_image(image_path, width, height):
-    pixmap = QPixmap(image_path)
-    return pixmap.scaled(width, height)
 
 def is_valid_email(email):
     pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
