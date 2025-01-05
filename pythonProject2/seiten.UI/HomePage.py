@@ -1111,23 +1111,35 @@ class TravelApp(QMainWindow):
             return None
 
     def on_validate_date_clicked(self):
-        departure_date = self.departure_date_edit.date().toString("dd-MM-yyyy")
+        departure_date = self.departure_date_edit.date()
         return_date = self.return_date_edit.date()
-        nights = self.selected_trip_data.get('Übernachtungen')
-        calculated_return_date = self.departure_date_edit.date().addDays(nights)
-        if return_date < calculated_return_date:
-            show_return_date_error("Invalid Return Date","The selected return date is incompatible.",f"The return date must account for the number of nights of your trip.\n"
-        f"The minimum return date should be: {calculated_return_date.toString('dd-MM-yyyy')}.")
+        minimum_return_date = departure_date.addDays(5)
+        #nights = self.selected_trip_data.get('Übernachtungen')
+        #calculated_return_date = self.departure_date_edit.date().addDays(nights)
+       #if return_date < calculated_return_date:
+        if return_date < minimum_return_date:
+            #show_return_date_error("Invalid Return Date","The selected return date is incompatible.",f"The return date must account for the number of nights of your trip.\n"
+        #f"The minimum return date should be: {calculated_return_date.toString('dd-MM-yyyy')}.")
+            show_return_date_error(
+                "Invalid Return Date",
+                "The selected return date is incompatible.",
+                f"The return date must be at least 5 days after the departure date.\n"
+                f"The earliest valid return date is: {minimum_return_date.toString('dd-MM-yyyy')}."
+            )
+            self.return_date_edit.setDate(minimum_return_date)
+            return_date = minimum_return_date
 
-            return_date = calculated_return_date
-            self.return_date_edit.setDate(return_date)
+            #return_date = calculated_return_date
+            #self.return_date_edit.setDate(return_date)
+        departure_date_str = departure_date.toString("dd-MM-yyyy")
+
         return_date_str = return_date.toString("dd-MM-yyyy")
 
-        self.update_gekauft_container(departure_date, return_date_str)
+        self.update_gekauft_container(departure_date_str, return_date_str)
         self.reisezeit_confirm_button.setEnabled(True)
         self.reisezeit_confirm_button.setStyleSheet(confirmbtnstyle)
 
-        print(f"Dates validées : Departure: {departure_date}, Return: {return_date}")
+        print(f"Dates validées : Departure: {departure_date_str}, Return: {return_date}")
 
     def on_cancel_date_clicked(self):
         self.reset_dates()
