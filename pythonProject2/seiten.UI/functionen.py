@@ -78,15 +78,7 @@ def get_cabin_image_path(cabin_type):
         return None
 
 
-def update_payment_page(cabin_type, cabin_price, cabin_details_label, total_price_label):
-    """
-    Aktualisieren Sie die Details der Zahlungsseite mit der ausgewählten Kabine und dem Preis.
-    """
-    cabin_details_label.setText(
-        f"<b>Selected Cabin:</b> {cabin_type}<br>"
-        f"<b>Price:</b> {cabin_price} €"
-    )
-    total_price_label.setText(f"Total Price: {cabin_price} €")
+
 
 
 def load_ship_types(folder_path, ship_combo):

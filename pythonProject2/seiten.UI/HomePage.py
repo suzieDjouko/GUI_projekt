@@ -238,7 +238,6 @@ class TravelApp(QMainWindow):
         self.menu_result_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.result_page))
         self.menu_cabins_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.cabin_page))
         self.menu_reisezeit_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.reisezeit_page))
-        self.menu_payment_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.payment_page))
 
 
         ##AUSWAHLSEITE
@@ -745,9 +744,14 @@ class TravelApp(QMainWindow):
                 cabin_type=self.selected_cabin_type,
                 cabin_price=self.selected_cabin_price,
                 user_balance=get_user_balance(self.header_user_name_edit.text()),
-                user_name=self.header_user_name_edit.text()
+                user_name=self.header_user_name_edit.text(),
+                stacked_widget=self.stacked_widget,
+                konto_edit=self.kontostand_amont_edit,
+                parent=self
             )
             self.stacked_widget.addWidget(self.payment_page)
+            self.menu_payment_pushbutton.clicked.connect(
+                lambda: self.stacked_widget.setCurrentWidget(self.payment_page))
             self.stacked_widget.setCurrentWidget(self.payment_page)
 
 
@@ -1049,8 +1053,6 @@ class TravelApp(QMainWindow):
         self.reset_dates()
 
 
-
-
     def show_error(self, message):
         QMessageBox.critical(self, "Erreur", message)
 
@@ -1089,8 +1091,6 @@ class TravelApp(QMainWindow):
         else:
             for ship_type in available_ships:
                 self.ship_combo.addItem(ship_type)
-
-
 
     def on_user_logo_clicked(self):
 
@@ -1169,6 +1169,4 @@ class TravelApp(QMainWindow):
 
         self.departure_date_edit.setDate(default_departure_date)
         self.return_date_edit.setDate(default_return_date)
-
-
 

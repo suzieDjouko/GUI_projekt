@@ -1,6 +1,6 @@
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMainWindow, QApplication, QLabel, QLineEdit, QPushButton, QMessageBox, QWidget, \
-    QVBoxLayout, QHBoxLayout, QFrame, QFormLayout, QSizePolicy, QSpacerItem
+    QVBoxLayout, QFormLayout, QSizePolicy, QSpacerItem
 from PyQt5.QtGui import QPixmap
 
 from HomePage import TravelApp
@@ -9,7 +9,6 @@ from database_action import *
 from styles import *
 import sqlite3
 import random
-import sys
 
 
 conn = sqlite3.connect('User.sqlite')

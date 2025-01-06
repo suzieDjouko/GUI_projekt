@@ -35,6 +35,9 @@ def is_valid_credit_card(credit_card):
 def is_valid_cvv(cvv):
     pattern =r"^\d{3}$"
     return re.match(pattern, cvv) is not None
+def is_valid_city(city):
+    pattern = r"^[a-zA-ZÀ-ÿ\s\-]+$"
+    return re.match(pattern, city) is not None
 
 
 def show_warning_message(title , message):

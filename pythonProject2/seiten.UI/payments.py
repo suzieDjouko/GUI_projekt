@@ -1,20 +1,22 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QComboBox, QHBoxLayout, QLabel, QPushButton
 from styles import *
 from checking_funktion import *
+from database_action import update_user_balance, get_user_balance
 
 
 class PaymentPage(QWidget):
-    def __init__(self, trip_data, cabin_type, cabin_price, user_balance, user_name, parent=None):
+    def __init__(self, trip_data, cabin_type, cabin_price, user_balance, user_name, stacked_widget, konto_edit, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Confirm Purchase")
         self.resize(800, 600)
 
-        # Données utilisateur
         self.trip_data = trip_data
         self.cabin_type = cabin_type
         self.cabin_price = cabin_price
         self.user_balance = user_balance
         self.user_name = user_name
+        self.stacked_widget = stacked_widget
+        self.konto_edit = konto_edit
 
         # Layout principal
         layout = QVBoxLayout()
@@ -26,28 +28,39 @@ class PaymentPage(QWidget):
         layout.addWidget(QLabel(f"<b>Price:</b> {int(cabin_price)} €"))
         layout.addWidget(QLabel(f"<b>Remaining Balance:</b> {int(user_balance - cabin_price)} €"))
 
-        # Champs utilisateur
-        self.street_input = self.create_input_field("Street and Number:")
-        self.postal_code_input = self.create_input_field("Postal Code:")
-        self.phone_input = self.create_input_field("Phone:")
+        # Champs utilisateur avec labels
+        layout.addWidget(QLabel("Street and Number:"))
+        self.street_input = self.create_input_field("Enter your street and number")
+        layout.addWidget(self.street_input)
+        self.street_input.textChanged.connect(self.validate_fields)
 
-        # Ajouter les champs au layout
-        for field in [self.street_input, self.postal_code_input, self.phone_input]:
-            layout.addWidget(field)
-            field.textChanged.connect(self.validate_fields)
+        layout.addWidget(QLabel("Postal Code:"))
+        self.postal_code_input = self.create_input_field("Enter your postal code")
+        layout.addWidget(self.postal_code_input)
+        self.postal_code_input.textChanged.connect(self.validate_fields)
+
+        layout.addWidget(QLabel("City:"))
+        self.city_input = self.create_input_field("Enter your city")
+        layout.addWidget(self.city_input)
+        self.city_input.textChanged.connect(self.validate_fields)
+
+        layout.addWidget(QLabel("Phone:"))
+        self.phone_input = self.create_input_field("Enter your phone number")
+        layout.addWidget(self.phone_input)
+        self.phone_input.textChanged.connect(self.validate_fields)
 
         # Pays (readonly)
+        layout.addWidget(QLabel("Country:"))
         self.country_input = QLineEdit("Germany")
         self.country_input.setReadOnly(True)
         self.country_input.setStyleSheet(loginmainstyle)
-        layout.addWidget(QLabel("Country:"))
         layout.addWidget(self.country_input)
 
         # Méthode de paiement
+        layout.addWidget(QLabel("Payment Method:"))
         self.payment_method_combo = QComboBox()
         self.payment_method_combo.setStyleSheet(style_box)
         self.payment_method_combo.addItems(["Bank Transfer", "Credit Card", "PayPal"])
-        layout.addWidget(QLabel("Payment Method:"))
         layout.addWidget(self.payment_method_combo)
         self.payment_method_combo.currentTextChanged.connect(self.update_payment_fields)
 
@@ -58,9 +71,15 @@ class PaymentPage(QWidget):
 
         # Boutons
         button_layout = QHBoxLayout()
+
+        self.save_button = QPushButton("Save as Text")
+        self.save_button.setStyleSheet(validbtnstyle)
+        self.save_button.clicked.connect(self.save_booking_as_text)
+        button_layout.addWidget(self.save_button)
+
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.setStyleSheet(cancelstyle)
-        self.cancel_button.clicked.connect(self.close)
+        self.cancel_button.clicked.connect(self.cancel_payment)
         button_layout.addWidget(self.cancel_button)
 
         self.confirm_button = QPushButton("Confirm")
@@ -80,7 +99,6 @@ class PaymentPage(QWidget):
         return field
 
     def update_payment_fields(self):
-        """Met à jour les champs dynamiques en fonction de la méthode de paiement sélectionnée."""
         for i in reversed(range(self.dynamic_payment_layout.count())):
             widget = self.dynamic_payment_layout.takeAt(i).widget()
             if widget:
@@ -111,9 +129,9 @@ class PaymentPage(QWidget):
         self.validate_fields()
 
     def validate_fields(self):
-        """Valide les champs obligatoires et active/désactive le bouton Confirm."""
         street_valid = is_valid_street(self.street_input.text().strip())
         postal_code_valid = is_valid_postcode(self.postal_code_input.text().strip())
+        city_valid = is_valid_city(self.city_input.text().strip())
         phone_valid = is_valid_phone(self.phone_input.text().strip())
 
         method = self.payment_method_combo.currentText()
@@ -130,7 +148,7 @@ class PaymentPage(QWidget):
             payment_valid = is_valid_email(self.paypal_email_input.text().strip())
 
         if hasattr(self, 'confirm_button'):
-            if street_valid and postal_code_valid and phone_valid and payment_valid:
+            if street_valid and postal_code_valid and city_valid  and phone_valid and payment_valid:
                 self.confirm_button.setEnabled(True)
                 self.confirm_button.setStyleSheet(confirmbtnstyle)
             else:
@@ -138,6 +156,46 @@ class PaymentPage(QWidget):
                 self.confirm_button.setStyleSheet(confirmbtnstyledisable)
 
     def confirm_purchase(self):
-        """Confirme l'achat."""
-        show_success_message("Purchase Confirmed", "Your booking has been successfully completed!")
-        self.close()
+        try:
+            new_balance = self.user_balance - self.cabin_price
+
+            update_user_balance(self.user_name, new_balance)
+            if self.konto_edit:
+                self.konto_edit.setText(f"{new_balance:} €")
+
+            show_success_message("Purchase Confirmed", "Your booking has been successfully completed!")
+
+        except Exception as e:
+            show_warning_message("Error", f"An error occurred during the purchase: {e}")
+
+    def cancel_payment(self):
+        if self.stacked_widget:
+            previous_page_index = self.stacked_widget.currentIndex() - 2
+            self.stacked_widget.setCurrentIndex(previous_page_index)
+
+    def save_booking_as_text(self):
+        try:
+            file_path, _ = QFileDialog.getSaveFileName(self, "Save Booking as Text", f"{self.user_name}_bookingconfirmation.txt",
+                                                       "Text Files (*.txt)")
+            if file_path:
+                with open(file_path, "w") as file:
+                    file.write(f"Name: {self.user_name}\n")
+                    file.write(f"Trip Number: {self.trip_data['Reisenummer']}\n")
+                    file.write(f"Cabin Type: {self.cabin_type}\n")
+                    file.write(f"Price: {self.cabin_price} €\n")
+                    file.write(
+                        f"Address: {self.street_input.text().strip()}, {self.postal_code_input.text().strip()} {self.city_input.text().strip()}, Germany\n")
+                    file.write(f"Phone: {self.phone_input.text().strip()}\n")
+                    file.write(f"Payment Method: {self.payment_method_combo.currentText()}\n")
+                    if hasattr(self, 'payment_input'):
+                        file.write(f"Bank Details: {self.payment_input.text().strip()}\n")
+                    if hasattr(self, 'card_number_input') and hasattr(self, 'cvv_input'):
+                        file.write(
+                            f"Card Number: {self.card_number_input.text().strip()} (CVV: {self.cvv_input.text().strip()})\n")
+                    if hasattr(self, 'paypal_email_input'):
+                        file.write(f"PayPal Email: {self.paypal_email_input.text().strip()}\n")
+
+                show_success_message("Saved", "Booking details have been saved successfully!")
+
+        except Exception as e:
+            show_warning_message("Error", f"An error occurred while saving the booking: {e}")
