@@ -1,8 +1,5 @@
 import os
 import pandas as pd
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtWidgets import QMessageBox, QGridLayout, QPushButton, QVBoxLayout, QLabel, QWidget
 
 
 def load_data(file_path, parent_widget):
@@ -80,78 +77,4 @@ def get_cabin_image_path(cabin_type):
 
 
 
-
-def load_ship_types(folder_path, ship_combo):
-    """Schiffstypen in das Kombinationsfeld laden."""
-    if not os.path.exists(folder_path):
-        ship_combo.addItem("No ship available")
-        return
-
-    for filename in os.listdir(folder_path):
-        if filename.lower().endswith((".png", ".jpg", ".jpeg")):
-            ship_name = filename.split(" ")[-1].split(".")[0]  # Example: "A" from "Schiffstyp A.jpg"
-            ship_combo.addItem(ship_name)
-
-
-def display_selected_ship_image(ship_name, folder_path, ship_image_label):
-    """Anzeige des Bildes des ausgewählten Schiffes."""
-    extensions = [".jpeg", ".JPG"]
-    image_path = None
-
-    for ext in extensions:
-        path = os.path.join(folder_path, f"Schiffstyp {ship_name}{ext}")
-        if os.path.exists(path):
-            image_path = path
-            break
-
-    if not image_path:
-        return
-
-    pixmap = QPixmap(image_path).scaled(300, 250, aspectRatioMode=1)  # Qt.KeepAspectRatio = 1
-    ship_image_label.setPixmap(pixmap)
-
-
-def create_city_selection(filtered_df, city_section_style, toggle_city_selection_callback):
-    """
-    Erstellen Sie den Stadtauswahlbereich dynamisch auf der Grundlage der gefilterten Ergebnisse.
-    """
-    grid_layout = QGridLayout()
-    row, col = 0, 0
-
-    # Extract unique cities
-    unique_cities = filtered_df["Besuchte_Städte"].dropna().unique()
-    cities = set(city.strip() for cities in unique_cities for city in cities.split(","))
-
-    for city in sorted(cities):
-        # Create image button
-        btn = QPushButton()
-        btn.setCheckable(True)
-        btn.setStyleSheet(city_section_style)
-        btn.setIcon(QIcon(f"../images/Hafenstaedte/{city}.jpg"))
-        btn.setIconSize(QSize(300, 250))
-
-        # Add click event
-        btn.clicked.connect(lambda _, c=city, b=btn: toggle_city_selection_callback(c, b))
-
-        # Add a label under the button
-        city_layout = QVBoxLayout()
-        city_layout.addWidget(btn)
-        city_label = QLabel(city)
-        city_label.setAlignment(Qt.AlignCenter)
-        city_layout.addWidget(city_label)
-
-        # Add to grid
-        city_widget = QWidget()
-        city_widget.setLayout(city_layout)
-        grid_layout.addWidget(city_widget, row, col)
-
-        col += 1
-        if col > 3:  # 4 columns max
-            col = 0
-            row += 1
-
-    # Return the layout as a QWidget
-    scroll_widget = QWidget()
-    scroll_widget.setLayout(grid_layout)
-    return scroll_widget
 

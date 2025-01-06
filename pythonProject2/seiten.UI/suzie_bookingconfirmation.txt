@@ -1,0 +1,8 @@
+Name: suzie
+Trip Number: 3
+Cabin Type: Aussenkabine
+Price: 578 €
+Address: ,  , Germany
+Phone: 
+Payment Method: Bank Transfer
+Bank Details: 

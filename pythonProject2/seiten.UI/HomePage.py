@@ -1,9 +1,12 @@
 import sys
 
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QHBoxLayout,
     QScrollArea, QComboBox, QSpinBox, QSizePolicy, QLineEdit,
-    QSpacerItem, QStackedWidget, QFrame, QListWidget, QListWidgetItem
+    QSpacerItem, QStackedWidget, QFrame, QListWidget, QListWidgetItem, QLabel, QWidget, QVBoxLayout, QGridLayout,
+    QPushButton
 )
 
 
@@ -133,7 +136,7 @@ class TravelApp(QMainWindow):
         self.header_kontostand_label = QLabel("Kontostand:")
         self.header_kontostand_label.setStyleSheet("QLabel {font-size: 24px;}")
         self.header_kontostand_label.setFixedHeight(40)
-        self.header_kontostand_label.setMinimumWidth(130)
+        self.header_kontostand_label.setMinimumWidth(110)
 
         self.kontostand_amont_edit = QLineEdit()
         self.kontostand_amont_edit.setStyleSheet("QLineEdit {font-size: 20px;}")
@@ -182,9 +185,6 @@ class TravelApp(QMainWindow):
         self.headerLayout.addItem(spacer)
         self.headerLayout.addWidget(self.header_logo_logout_button)
 
-        #self.setLayout(self.headerLayout)
-
-
         # MENU
 
         # Erstellen Sie die Seiten
@@ -194,8 +194,6 @@ class TravelApp(QMainWindow):
         self.selection_page = QWidget()
         self.result_page = QWidget()
         self.cabin_page = QWidget()
-        #self.payment_page = QWidget()
-        #self.reisezeit_page = QWidget()
         self.user_profil = UserInfoWindow()
         self.user_profil.return_callback = lambda: self.stacked_widget.setCurrentWidget(self.selection_page)
 
@@ -203,8 +201,7 @@ class TravelApp(QMainWindow):
         self.stacked_widget.addWidget(self.selection_page)
         self.stacked_widget.addWidget(self.result_page)
         self.stacked_widget.addWidget(self.cabin_page)
-        #self.stacked_widget.addWidget(self.reisezeit_page)
-        #self.stacked_widget.addWidget(self.payment_page)
+
         self.stacked_widget.addWidget(self.user_profil)
 
 
@@ -545,17 +542,6 @@ class TravelApp(QMainWindow):
         self.display_cabin_images(row_data)
         self.stacked_widget.setCurrentWidget(self.cabin_page)
 
-    def update_payment_page(self, row_data):
-       trip_details = (
-           f"<b>Trip number:</b> {row_data['Reisenummer']}<br>"
-           f"<b>Sea:</b> {row_data['Meerart']}<br>"
-           f"<b>Number of nights:</b> {row_data['Übernachtungen']}<br>"
-           f"<b>Cities:</b> {row_data['Besuchte_Städte']}<br>"
-           f"<b>Ship type:</b> {row_data['Schiffstyp']}<br>"
-           f"<b>Selected Cabin:</b> {self.selected_cabin_type}<br>"
-           f"<b>Price:</b> {self.selected_cabin_price} €"
-       )
-       self.reservation_details_label = f"{trip_details}"
 
     def display_cabin_images(self, row_data):
         clear_layout(self.cabin_layout)

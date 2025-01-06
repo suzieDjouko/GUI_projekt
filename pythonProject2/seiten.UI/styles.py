@@ -1,4 +1,3 @@
-from PyQt5.QtWidgets import QPushButton
 
 style_box = """
 QComboBox {

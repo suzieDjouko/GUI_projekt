@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QComboBox, QHBoxLayout, QLabel
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QComboBox, QHBoxLayout, QLabel, QPushButton
 from styles import *
 from checking_funktion import *
 from database_action import update_user_balance
@@ -9,7 +9,6 @@ class PaymentPage(QWidget):
                  stacked_widget, konto_edit, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Confirm Purchase")
-        #self.resize(800, 600)
 
         self.trip_data = trip_data
         self.cabin_type = cabin_type
@@ -202,5 +201,6 @@ class PaymentPage(QWidget):
                 if self.stacked_widget:
                     self.stacked_widget.setCurrentWidget(self.stacked_widget.widget(0))
 
-        except Exception as e:
-            show_warning_message("Error", f"An error occurred while saving the booking: {e}")
+        except Exception:
+            return
+            #show_warning_message("Error", f"An error occurred while saving the booking: {e}")
