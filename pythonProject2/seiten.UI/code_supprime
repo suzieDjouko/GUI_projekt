@@ -403,3 +403,178 @@
         self.reisezeit_confirm_button.setStyleSheet(confirmbtnstyle)
 
         print(f"Dates validées : Departure: {departure_date}, Return: {return_date}")
+
+
+
+
+
+
+
+
+
+####REISEZEIT
+self.result_layout = QVBoxLayout()
+        self.result_label = QLabel("List of Trips:")
+        self.result_layout.addWidget(self.result_label)
+        self.result_list = QListWidget()
+        self.result_list.setStyleSheet(Qlist_style)
+        self.result_layout.addWidget(self.result_list)
+        self.return_button = QPushButton("Return")
+        self.return_button.setStyleSheet(back_button_style)
+        self.return_button.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.selection_page))
+        self.result_layout.addWidget(self.return_button)
+
+        self.result_page.setLayout(self.result_layout)
+
+        #SEITE KABINEN
+        #self.cabintype_folder = "../images/Kabinentypen"
+
+        self.cabin_layout = QVBoxLayout()
+
+        self.cabin_summary_label = QLabel()
+        self.cabin_summary_label.setAlignment(Qt.AlignTop)
+        self.cabin_summary_label.setStyleSheet("font-size: 18px; font-weight: bold; margin-bottom: 10px;")
+        #self.cabin_layout.addWidget(self.cabin_summary_label)
+        back_button = QPushButton("Return")
+        back_button.setStyleSheet(back_button_style)
+        back_button.clicked.connect(self.on_back_to_results_clicked)  # Connecter au retour
+
+        self.cabin_scroll_area = QScrollArea()
+        self.cabin_scroll_area.setWidgetResizable(True)
+
+
+        cabin_content_widget = QWidget()
+        cabin_content_widget.setLayout(self.cabin_layout)
+
+        self.cabin_scroll_area.setWidget(cabin_content_widget)
+
+        cabin_page_layout = QVBoxLayout()
+        cabin_page_layout.addWidget(self.cabin_summary_label)
+        cabin_page_layout.addWidget(self.cabin_scroll_area)
+        cabin_page_layout.addWidget(back_button)
+        self.cabin_page.setLayout(cabin_page_layout)
+
+        # SEITE DATUMSAUSWAHL
+        self.reisezeit_page_layout = QVBoxLayout()  # Hauptlayout für die Seite
+
+        # Titel außerhalb des Scrollens hinzufügen
+        adjust_title = QLabel("<h2>Adjust Your Travel Time</h2>")
+        adjust_title.setAlignment(Qt.AlignCenter)
+        self.reisezeit_page_layout.addWidget(adjust_title)
+
+        # Abschnitt mit scrollbarem Inhalt
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+
+        # Container für scrollbare Inhalte
+        scrollable_widget = QWidget()
+        self.reisezeit_layout = QVBoxLayout(scrollable_widget)
+
+        # Reisedetails hinzufügen
+        self.reisezeit_trip_details_label = QLabel()
+        self.reisezeit_trip_details_label.setStyleSheet("font-size: 18px; margin-bottom: 20px;")
+        self.reisezeit_layout.addWidget(self.reisezeit_trip_details_label)
+
+        # Abschnitt für Städte
+        self.reisezeit_layout.addWidget(QLabel("Cities:"))
+        self.reisezeit_city_scroll_area = QScrollArea()
+        self.reisezeit_city_scroll_area.setWidgetResizable(True)
+        self.reisezeit_layout.addWidget(self.reisezeit_city_scroll_area)
+
+        # Bilder von Bootstypen und Kabinen
+        self.reisezeit_ship_cabin_layout = QHBoxLayout()
+        ship_layout = QVBoxLayout()
+        ship_layout.addWidget(QLabel("Ship Type:"))
+        self.reisezeit_ship_image_label = QLabel()
+        self.reisezeit_ship_image_label.setFixedSize(300, 250)
+        self.reisezeit_ship_image_label.setAlignment(Qt.AlignCenter)
+        ship_layout.addWidget(self.reisezeit_ship_image_label)
+        self.reisezeit_ship_cabin_layout.addLayout(ship_layout)
+
+        cabin_layout = QVBoxLayout()
+        cabin_layout.addWidget(QLabel("Cabin:"))
+        self.reisezeit_cabin_image_label = QLabel()
+        self.reisezeit_cabin_image_label.setFixedSize(300, 250)
+        self.reisezeit_cabin_image_label.setAlignment(Qt.AlignCenter)
+        cabin_layout.addWidget(self.reisezeit_cabin_image_label)
+        self.reisezeit_ship_cabin_layout.addLayout(cabin_layout)
+
+        self.reisezeit_layout.addLayout(self.reisezeit_ship_cabin_layout)
+
+        # Datumsauswahlen hinzufügen
+        self.reisezeit_layout.addWidget(QLabel("Departure Date:"))
+        self.departure_date_edit = QDateEdit()
+        self.departure_date_edit.setStyleSheet(Datestyle)
+        self.departure_date_edit.setCalendarPopup(True)
+        self.departure_date_edit.setMinimumDate(QDate(2025, 5, 1))
+        self.departure_date_edit.setMaximumDate(QDate(2025, 10, 31))
+        self.reisezeit_layout.addWidget(self.departure_date_edit)
+
+        self.reisezeit_layout.addWidget(QLabel("Return Date:"))
+        self.return_date_edit = QDateEdit()
+        self.return_date_edit.setStyleSheet(Datestyle)
+        self.return_date_edit.setCalendarPopup(True)
+        self.return_date_edit.setMinimumDate(QDate(2025, 5, 2))
+        self.return_date_edit.setMaximumDate(QDate(2025, 10, 31))
+        self.reisezeit_layout.addWidget(self.return_date_edit)
+        date_button_layout = QHBoxLayout()
+        date_button_layout.addStretch()
+
+        self.validate_date_button = QPushButton("Valid")
+        self.validate_date_button.setFixedSize(150, 40)
+        self.validate_date_button.setStyleSheet(validbtnstyle)
+        self.validate_date_button.clicked.connect(self.on_validate_date_clicked)
+        date_button_layout.addWidget(self.validate_date_button,alignment=Qt.AlignRight)
+
+        self.cancel_date_button = QPushButton("Cancel")
+        self.cancel_date_button.setFixedSize(150, 40)
+        self.cancel_date_button.setStyleSheet(cancelstyle)
+        self.cancel_date_button.clicked.connect(self.on_cancel_date_clicked)
+        date_button_layout.addWidget(self.cancel_date_button,alignment=Qt.AlignRight)
+
+        # Das Layout der Schaltflächen zum Hauptlayout hinzufügen
+        self.reisezeit_layout.addLayout(date_button_layout)
+
+        # Abschnitt für gekaufte Reisen
+
+        self.reisezeit_layout.addWidget(QLabel("<b>Purchased Products</b>"))
+        self.gekauft_scroll_area = QScrollArea()
+        self.gekauft_scroll_area.setWidgetResizable(True)
+
+        self.date_layout = QVBoxLayout()
+
+
+        self.gekauft_container = QWidget()
+
+        self.gekauft_layout = QVBoxLayout(self.gekauft_container)
+        #self.gekauft_layout.addLayout(self.date_layout)
+        self.gekauft_layout.setContentsMargins(20, 10, 20, 10)
+        self.gekauft_layout.setSpacing(15)
+
+
+
+        self.gekauft_scroll_area.setWidget(self.gekauft_container)
+        self.reisezeit_layout.addWidget(self.gekauft_scroll_area)
+
+        scroll_area.setWidget(scrollable_widget)
+        self.reisezeit_page_layout.addWidget(scroll_area)
+
+        button_layout = QHBoxLayout()
+        self.reisezeit_return_button = QPushButton("Return")
+        self.reisezeit_return_button.setStyleSheet(back_button_style)
+        self.reisezeit_return_button.clicked.connect(self.on_back_to_cabin_clicked)
+
+        self.reisezeit_confirm_button = QPushButton("Confirm")
+        self.reisezeit_confirm_button.setEnabled(False)
+        self.reisezeit_confirm_button.setStyleSheet(confirmbtnstyledisable)
+
+        self.reisezeit_confirm_button.clicked.connect(self.on_confirm_date_selection)
+
+        button_layout.addWidget(self.reisezeit_return_button)
+        button_layout.addWidget(self.reisezeit_confirm_button)
+
+        self.reisezeit_page_layout.addLayout(button_layout)
+
+        # Seite Reisezeit einrichten
+        self.reisezeit_page.setLayout(self.reisezeit_page_layout)
+#####

@@ -126,27 +126,12 @@ def show_success_message(title, message):
     success_box.exec_()
 
 
-def download_booking_file(self):
-    """
-    Ermöglicht dem Benutzer das Herunterladen der Buchungsdatei
-    """
-    try:
-        # Path to the existing booking file
-        file_path = "bookings.txt"
-
-        # Check if the file exists
-        if not os.path.exists(file_path):
-            QMessageBox.warning(self, "Error", "The booking file does not exist.")
-            return
-
-        # Open a file dialog to select the download location
-        save_path, _ = QFileDialog.getSaveFileName(self, "Save As", "booking.txt", "Text Files (*.txt)")
-
-        # If a location is selected, copy the file
-        if save_path:
-            with open(file_path, "r") as original_file, open(save_path, "w") as new_file:
-                new_file.write(original_file.read())
-
-            QMessageBox.information(self, "Success", "The booking file has been downloaded successfully.")
-    except Exception as e:
-        QMessageBox.critical(self, "Error", f"An error occurred: {e}")
+def clear_layout(layout):
+    """Löscht alle Widgets eines Layouts."""
+    if layout is not None:
+        while layout.count():  # Überprüft, ob er Widgets enthält
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+    else:
+        print("Layout is None, nothing to clear.")

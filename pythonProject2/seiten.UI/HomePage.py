@@ -1,12 +1,10 @@
 import sys
 
-from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QHBoxLayout,
     QScrollArea, QComboBox, QSpinBox, QSizePolicy, QLineEdit,
-    QSpacerItem, QStackedWidget, QFrame, QListWidget, QListWidgetItem, QCalendarWidget, QDateEdit, QDialog
+    QSpacerItem, QStackedWidget, QFrame, QListWidget, QListWidgetItem
 )
-from PyQt5.QtGui import QTextCharFormat, QColor
 
 
 
@@ -16,7 +14,7 @@ from functionen import *
 from checking_funktion import *
 
 from user_info import UserInfoWindow
-from payments import PaymentPage
+from reisezeit import ReisezeitPage
 
 
 
@@ -196,8 +194,8 @@ class TravelApp(QMainWindow):
         self.selection_page = QWidget()
         self.result_page = QWidget()
         self.cabin_page = QWidget()
-        self.payment_page = QWidget()
-        self.reisezeit_page = QWidget()
+        #self.payment_page = QWidget()
+        #self.reisezeit_page = QWidget()
         self.user_profil = UserInfoWindow()
         self.user_profil.return_callback = lambda: self.stacked_widget.setCurrentWidget(self.selection_page)
 
@@ -205,7 +203,7 @@ class TravelApp(QMainWindow):
         self.stacked_widget.addWidget(self.selection_page)
         self.stacked_widget.addWidget(self.result_page)
         self.stacked_widget.addWidget(self.cabin_page)
-        self.stacked_widget.addWidget(self.reisezeit_page)
+        #self.stacked_widget.addWidget(self.reisezeit_page)
         #self.stacked_widget.addWidget(self.payment_page)
         self.stacked_widget.addWidget(self.user_profil)
 
@@ -237,8 +235,6 @@ class TravelApp(QMainWindow):
         self.menu_selection_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.selection_page))
         self.menu_result_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.result_page))
         self.menu_cabins_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.cabin_page))
-        self.menu_reisezeit_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.reisezeit_page))
-
 
         ##AUSWAHLSEITE
 
@@ -369,128 +365,6 @@ class TravelApp(QMainWindow):
         self.cabin_page.setLayout(cabin_page_layout)
 
         # SEITE DATUMSAUSWAHL
-        self.reisezeit_page_layout = QVBoxLayout()  # Hauptlayout für die Seite
-
-        # Titel außerhalb des Scrollens hinzufügen
-        adjust_title = QLabel("<h2>Adjust Your Travel Time</h2>")
-        adjust_title.setAlignment(Qt.AlignCenter)
-        self.reisezeit_page_layout.addWidget(adjust_title)
-
-        # Abschnitt mit scrollbarem Inhalt
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-
-        # Container für scrollbare Inhalte
-        scrollable_widget = QWidget()
-        self.reisezeit_layout = QVBoxLayout(scrollable_widget)
-
-        # Reisedetails hinzufügen
-        self.reisezeit_trip_details_label = QLabel()
-        self.reisezeit_trip_details_label.setStyleSheet("font-size: 18px; margin-bottom: 20px;")
-        self.reisezeit_layout.addWidget(self.reisezeit_trip_details_label)
-
-        # Abschnitt für Städte
-        self.reisezeit_layout.addWidget(QLabel("Cities:"))
-        self.reisezeit_city_scroll_area = QScrollArea()
-        self.reisezeit_city_scroll_area.setWidgetResizable(True)
-        self.reisezeit_layout.addWidget(self.reisezeit_city_scroll_area)
-
-        # Bilder von Bootstypen und Kabinen
-        self.reisezeit_ship_cabin_layout = QHBoxLayout()
-        ship_layout = QVBoxLayout()
-        ship_layout.addWidget(QLabel("Ship Type:"))
-        self.reisezeit_ship_image_label = QLabel()
-        self.reisezeit_ship_image_label.setFixedSize(300, 250)
-        self.reisezeit_ship_image_label.setAlignment(Qt.AlignCenter)
-        ship_layout.addWidget(self.reisezeit_ship_image_label)
-        self.reisezeit_ship_cabin_layout.addLayout(ship_layout)
-
-        cabin_layout = QVBoxLayout()
-        cabin_layout.addWidget(QLabel("Cabin:"))
-        self.reisezeit_cabin_image_label = QLabel()
-        self.reisezeit_cabin_image_label.setFixedSize(300, 250)
-        self.reisezeit_cabin_image_label.setAlignment(Qt.AlignCenter)
-        cabin_layout.addWidget(self.reisezeit_cabin_image_label)
-        self.reisezeit_ship_cabin_layout.addLayout(cabin_layout)
-
-        self.reisezeit_layout.addLayout(self.reisezeit_ship_cabin_layout)
-
-        # Datumsauswahlen hinzufügen
-        self.reisezeit_layout.addWidget(QLabel("Departure Date:"))
-        self.departure_date_edit = QDateEdit()
-        self.departure_date_edit.setStyleSheet(Datestyle)
-        self.departure_date_edit.setCalendarPopup(True)
-        self.departure_date_edit.setMinimumDate(QDate(2025, 5, 1))
-        self.departure_date_edit.setMaximumDate(QDate(2025, 10, 31))
-        self.reisezeit_layout.addWidget(self.departure_date_edit)
-
-        self.reisezeit_layout.addWidget(QLabel("Return Date:"))
-        self.return_date_edit = QDateEdit()
-        self.return_date_edit.setStyleSheet(Datestyle)
-        self.return_date_edit.setCalendarPopup(True)
-        self.return_date_edit.setMinimumDate(QDate(2025, 5, 2))
-        self.return_date_edit.setMaximumDate(QDate(2025, 10, 31))
-        self.reisezeit_layout.addWidget(self.return_date_edit)
-        date_button_layout = QHBoxLayout()
-        date_button_layout.addStretch()
-
-        self.validate_date_button = QPushButton("Valid")
-        self.validate_date_button.setFixedSize(150, 40)
-        self.validate_date_button.setStyleSheet(validbtnstyle)
-        self.validate_date_button.clicked.connect(self.on_validate_date_clicked)
-        date_button_layout.addWidget(self.validate_date_button,alignment=Qt.AlignRight)
-
-        self.cancel_date_button = QPushButton("Cancel")
-        self.cancel_date_button.setFixedSize(150, 40)
-        self.cancel_date_button.setStyleSheet(cancelstyle)
-        self.cancel_date_button.clicked.connect(self.on_cancel_date_clicked)
-        date_button_layout.addWidget(self.cancel_date_button,alignment=Qt.AlignRight)
-
-        # Das Layout der Schaltflächen zum Hauptlayout hinzufügen
-        self.reisezeit_layout.addLayout(date_button_layout)
-
-        # Abschnitt für gekaufte Reisen
-
-        self.reisezeit_layout.addWidget(QLabel("<b>Purchased Products</b>"))
-        self.gekauft_scroll_area = QScrollArea()
-        self.gekauft_scroll_area.setWidgetResizable(True)
-
-        self.date_layout = QVBoxLayout()
-
-
-        self.gekauft_container = QWidget()
-
-        self.gekauft_layout = QVBoxLayout(self.gekauft_container)
-        #self.gekauft_layout.addLayout(self.date_layout)
-        self.gekauft_layout.setContentsMargins(20, 10, 20, 10)
-        self.gekauft_layout.setSpacing(15)
-
-
-
-        self.gekauft_scroll_area.setWidget(self.gekauft_container)
-        self.reisezeit_layout.addWidget(self.gekauft_scroll_area)
-
-        scroll_area.setWidget(scrollable_widget)
-        self.reisezeit_page_layout.addWidget(scroll_area)
-
-        button_layout = QHBoxLayout()
-        self.reisezeit_return_button = QPushButton("Return")
-        self.reisezeit_return_button.setStyleSheet(back_button_style)
-        self.reisezeit_return_button.clicked.connect(self.on_back_to_cabin_clicked)
-
-        self.reisezeit_confirm_button = QPushButton("Confirm")
-        self.reisezeit_confirm_button.setEnabled(False)
-        self.reisezeit_confirm_button.setStyleSheet(confirmbtnstyledisable)
-
-        self.reisezeit_confirm_button.clicked.connect(self.on_confirm_date_selection)
-
-        button_layout.addWidget(self.reisezeit_return_button)
-        button_layout.addWidget(self.reisezeit_confirm_button)
-
-        self.reisezeit_page_layout.addLayout(button_layout)
-
-        # Seite Reisezeit einrichten
-        self.reisezeit_page.setLayout(self.reisezeit_page_layout)
 
 
         #PAYEMENT
@@ -499,15 +373,6 @@ class TravelApp(QMainWindow):
         self.total_price_label = QLabel("Total Price: €0")
 
         self.payment_layout.addWidget(self.total_price_label)
-       # self.confirm_button = QPushButton("Confirm")
-        #self.payment_layout.addWidget(self.confirm_button)
-        #self.payment_page.setLayout(self.payment_layout)
-
-
-
-
-
-
 
         main_layout = QVBoxLayout()
         main_layout.addLayout(self.headerLayout)
@@ -516,108 +381,13 @@ class TravelApp(QMainWindow):
 
 
         main_layout.addWidget(self.stacked_widget)
-
-
         # Configurer la fenêtre principale
         container = QWidget()
         container.setContentsMargins(20, 20, 20, 20)
         container.setLayout(main_layout)
         self.setCentralWidget(container)
 
-    def update_reisezeit_page(self, row_data):
-        """
-        Aktualisiert die spezifischen Elemente auf der Seite Reisezeit.
-        """
-        try:
-            # Vérifiez que city_scroll_area est correctement configuré
-            if self.reisezeit_city_scroll_area is None:
-                self.reisezeit_city_scroll_area = QScrollArea()
 
-            # Reisedetails aktualisieren
-            trip_details = (
-                f"<b>Trip number:</b> {row_data['Reisenummer']}<br>"
-                f"<b>Sea:</b> {row_data['Meerart']}<br>"
-                f"<b>Number of nights:</b> {row_data['Übernachtungen']}<br>"
-                f"<b>Cities:</b> {row_data['Besuchte_Städte']}<br>"
-                f"<b>Ship type:</b> {row_data['Schiffstyp']}<br>"
-                f"<b>Selected Cabin:</b> {self.selected_cabin_type}<br>"
-                f"<b>Price:</b> {self.selected_cabin_price} €"
-            )
-            self.reisezeit_trip_details_label.setText(trip_details)
-            self.apply_date_restrictions(row_data['Schiffstyp'],row_data['Übernachtungen'])
-
-            # Bilder von Städten leeren und aktualisieren
-            city_layout = QHBoxLayout()
-            for city in row_data['Besuchte_Städte'].split(','):
-                city = city.strip()
-                city_label = QLabel()
-                image_path = f"../images/Hafenstaedte/{city}.jpg"
-                if os.path.exists(image_path):
-                    city_label.setPixmap(QPixmap(image_path).scaled(150, 100, Qt.KeepAspectRatio))
-                else:
-                    city_label.setText(f"No image for {city}")
-                city_label.setAlignment(Qt.AlignCenter)
-                city_layout.addWidget(city_label)
-            city_widget = QWidget()
-            city_widget.setLayout(city_layout)
-            self.reisezeit_city_scroll_area.setWidget(city_widget)
-            self.reisezeit_city_scroll_area.setFixedHeight(150)
-
-            # Bild des Schiffstyps aktualisieren
-            ship_image_path = f"../images/Schiffstypen/Schiffstyp {row_data['Schiffstyp']}.jpg"
-            if os.path.exists(ship_image_path):
-                self.reisezeit_ship_image_label.setPixmap(QPixmap(ship_image_path).scaled(300, 250, Qt.KeepAspectRatio))
-            else:
-                self.reisezeit_ship_image_label.setText("No image available")
-
-            # Das Bild der ausgewählten Kabine aktualisieren
-            cabin_image_path = get_cabin_image_path(self.selected_cabin_type)
-            if cabin_image_path:
-                self.reisezeit_cabin_image_label.setPixmap(
-                    QPixmap(cabin_image_path).scaled(300, 250, Qt.KeepAspectRatio))
-            else:
-                self.reisezeit_cabin_image_label.setText("No cabin selected")
-        except Exception as e:
-            print(f"Erreur lors de la mise à jour de la page Reisezeit : {e}")
-
-    def apply_date_restrictions(self, ship_type, nights):
-        # Abfahrtstage nach Schiffstyp
-        ship_departure_days = {
-            'A': [1],  # Monday
-            'B': [2],  # Tuesday
-            'C': [3],  # Wednesday
-            'D': [4],  # Thursday
-            'E': [5],  # Friday
-            'F': [6],  # Saturday
-            'G': [7],  # Sunday
-            'H': [7],  # Sunday
-            'I': [7],  # Sunday
-            'J': [1, 3],  # First Monday and Wednesday of each month
-            'K': [1, 3],  # First Monday and Wednesday of each month
-            'X': [1],  # First day of each month
-        }
-
-        valid_days = ship_departure_days.get(ship_type, [])
-        disabled_format = QTextCharFormat()
-        disabled_format.setForeground(QColor(200, 200, 200))  # Grau für ungültige Daten
-
-        enabled_format = QTextCharFormat()
-        enabled_format.setForeground(QColor(0, 0, 0))  # Schwarz für gültige Daten
-
-        # Einschränkungen auf den Kalender anwenden
-        current_date = QDate(2025, 5, 1)
-        while current_date <= QDate(2025, 10, 31):
-            if current_date.dayOfWeek() not in valid_days:
-                self.departure_date_edit.calendarWidget().setDateTextFormat(current_date, disabled_format)
-            else:
-                #self.departure_date_edit.calendarWidget().setDateTextFormat(current_date, enabled_format)
-                return_date = current_date.addDays(nights)
-                if return_date > QDate(2025, 10, 31):
-                    self.departure_date_edit.calendarWidget().setDateTextFormat(current_date, disabled_format)
-                else:
-                    self.departure_date_edit.calendarWidget().setDateTextFormat(current_date, enabled_format)
-
-            current_date = current_date.addDays(1)
     def get_filtered_results(self):
 
             # Filterwerte erhalten
@@ -714,66 +484,38 @@ class TravelApp(QMainWindow):
         self.result_label.setText("Results found:")
 
     def on_pay_clicked(self, cabin_type, cabin_price, row_data):
-        """     Methode, die aufgerufen wird, wenn auf die Schaltfläche 'Bezahlen' geklickt wird.        """
         try:
-            # Speichern Sie die ausgewählte Kabine und ihren Preis
             self.selected_cabin_type = cabin_type
             self.selected_cabin_price = cabin_price
-            self.selected_trip_data = row_data
+            self.trip_data = row_data
+            self.user_balance = get_user_balance(self.header_user_name_edit.text())
 
-            self.total_price_label.setText(f"Total Price: €{cabin_price}")
-
-            # Seite Reisezeit aktualisieren
-            self.update_reisezeit_page(row_data)
-
-            # Zur Seite Reisezeit navigieren
-            self.stacked_widget.setCurrentWidget(self.reisezeit_page)
-
-        except Exception as e:
-            print(f"Erreur lors de la mise à jour de la page Reisezeit : {e}")
-
-    #def on_confirm_date_selection(self):
-     #       self.update_payment_page(self.selected_trip_data)
-      #      self.stacked_widget.setCurrentWidget(self.payment_page)
-
-    def on_confirm_date_selection(self):
-
-        try:
-            self.payment_page = PaymentPage(
-                trip_data=self.selected_trip_data,
+            # Créer une nouvelle instance de ReisezeitPage avec les données à jour
+            reisezeit_page = ReisezeitPage(
+                trip_data=self.trip_data,
                 cabin_type=self.selected_cabin_type,
                 cabin_price=self.selected_cabin_price,
-                user_balance=get_user_balance(self.header_user_name_edit.text()),
-                user_name=self.header_user_name_edit.text(),
+                user_balance=self.user_balance,
+                user_name=self.header_user_name_edit,
                 stacked_widget=self.stacked_widget,
                 konto_edit=self.kontostand_amont_edit,
-                parent=self
+                payment_page=None,
+                cabin_page=self.cabin_page,
             )
-            self.stacked_widget.addWidget(self.payment_page)
-            self.menu_payment_pushbutton.clicked.connect(
-                lambda: self.stacked_widget.setCurrentWidget(self.payment_page))
-            self.stacked_widget.setCurrentWidget(self.payment_page)
+            reisezeit_page.update_reisezeit_page()
 
+            self.stacked_widget.addWidget(reisezeit_page)
+            self.menu_reisezeit_pushbutton.clicked.connect(
+                lambda: self.stacked_widget.setCurrentWidget(reisezeit_page))
+
+            self.stacked_widget.setCurrentWidget(reisezeit_page)
 
         except Exception as e:
-            print(f"Erreur lors de la validation de la page Reisezeit : {e}")
+            print(f"Error in on_pay_clicked: {e}")
+
 
     def on_back_to_results_clicked(self):
-        self.stacked_widget.setCurrentWidget(self.result_page)  # Naviguer vers la page des résultats
-
-    def on_back_to_cabin_clicked(self):
-        self.selected_cabin_type = None
-        self.stacked_widget.setCurrentWidget(self.cabin_page)
-
-    def clear_layout(self, layout):
-        """Löscht alle Widgets eines Layouts."""
-        if layout is not None:
-            while layout.count():  # Überprüft, ob er Widgets enthält
-                child = layout.takeAt(0)
-                if child.widget():
-                    child.widget().deleteLater()
-        else:
-            print("Layout is None, nothing to clear.")
+        self.stacked_widget.setCurrentWidget(self.result_page)
 
     def on_search_button_clicked(self):
         filtered_results = self.get_filtered_results()
@@ -816,7 +558,7 @@ class TravelApp(QMainWindow):
        self.reservation_details_label = f"{trip_details}"
 
     def display_cabin_images(self, row_data):
-        self.clear_layout(self.cabin_layout)
+        clear_layout(self.cabin_layout)
 
         cabin_details = {
             "Innenkabine": "Comfortable and budget-friendly, ideal for travelers seeking functionality.",
@@ -1047,10 +789,9 @@ class TravelApp(QMainWindow):
         self.ship_image_label.clear()
 
         self.result_list.clear()
-        self.clear_layout(self.cabin_layout)
+        clear_layout(self.cabin_layout)
         self.cabin_summary_label.setText("")
         self.total_price_label = QLabel("Total Price: €0")
-        self.reset_dates()
 
 
     def show_error(self, message):
@@ -1109,64 +850,4 @@ class TravelApp(QMainWindow):
             self.user_profil.update_user_info(user_data)
         else:
             return None
-
-    def on_validate_date_clicked(self):
-        departure_date = self.departure_date_edit.date()
-        return_date = self.return_date_edit.date()
-        minimum_return_date = departure_date.addDays(5)
-        #nights = self.selected_trip_data.get('Übernachtungen')
-        #calculated_return_date = self.departure_date_edit.date().addDays(nights)
-       #if return_date < calculated_return_date:
-        if return_date < minimum_return_date:
-            #show_return_date_error("Invalid Return Date","The selected return date is incompatible.",f"The return date must account for the number of nights of your trip.\n"
-        #f"The minimum return date should be: {calculated_return_date.toString('dd-MM-yyyy')}.")
-            show_return_date_error(
-                "Invalid Return Date",
-                "The selected return date is incompatible.",
-                f"The return date must be at least 5 days after the departure date.\n"
-                f"The earliest valid return date is: {minimum_return_date.toString('dd-MM-yyyy')}."
-            )
-            self.return_date_edit.setDate(minimum_return_date)
-            return_date = minimum_return_date
-
-            #return_date = calculated_return_date
-            #self.return_date_edit.setDate(return_date)
-        departure_date_str = departure_date.toString("dd-MM-yyyy")
-
-        return_date_str = return_date.toString("dd-MM-yyyy")
-
-        self.update_gekauft_container(departure_date_str, return_date_str)
-        self.reisezeit_confirm_button.setEnabled(True)
-        self.reisezeit_confirm_button.setStyleSheet(confirmbtnstyle)
-
-        print(f"Dates validées : Departure: {departure_date_str}, Return: {return_date}")
-
-    def on_cancel_date_clicked(self):
-        self.reset_dates()
-        self.clear_layout(self.gekauft_layout)
-        self.clear_layout(self.date_layout)
-        self.departure_date_edit.setDate(QDate(2025, 5, 1))
-        self.return_date_edit.setDate(QDate(2025, 5, 2))
-        self.stacked_widget.setCurrentWidget(self.selection_page)
-
-
-    def update_gekauft_container(self, departure_date, return_date):
-        self.clear_layout(self.date_layout)
-        self.gekauft_layout.addWidget(self.reisezeit_trip_details_label)
-        departure_label = QLabel(f"<b>Departure Date:</b> {departure_date}")
-        return_label = QLabel(f"<b>Return Date:</b> {return_date}")
-        departure_label.setStyleSheet("font-size: 16px; margin-bottom: 5px;")
-        return_label.setStyleSheet("font-size: 16px; margin-bottom: 10px;")
-        self.date_layout.addWidget(departure_label)
-        self.date_layout.addWidget(return_label)
-        self.gekauft_layout.addLayout(self.date_layout)
-        self.gekauft_scroll_area.setWidget(self.gekauft_container)
-
-    def reset_dates(self):
-
-        default_departure_date = QDate(2025, 5, 1)
-        default_return_date = QDate(2025, 5, 2)
-
-        self.departure_date_edit.setDate(default_departure_date)
-        self.return_date_edit.setDate(default_return_date)
 

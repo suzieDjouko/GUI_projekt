@@ -1,14 +1,15 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QComboBox, QHBoxLayout, QLabel, QPushButton
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QComboBox, QHBoxLayout, QLabel
 from styles import *
 from checking_funktion import *
-from database_action import update_user_balance, get_user_balance
+from database_action import update_user_balance
 
 
 class PaymentPage(QWidget):
-    def __init__(self, trip_data, cabin_type, cabin_price, user_balance, user_name, stacked_widget, konto_edit, parent=None):
+    def __init__(self, trip_data, cabin_type, cabin_price, user_balance, user_name,
+                 stacked_widget, konto_edit, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Confirm Purchase")
-        self.resize(800, 600)
+        #self.resize(800, 600)
 
         self.trip_data = trip_data
         self.cabin_type = cabin_type
@@ -170,13 +171,13 @@ class PaymentPage(QWidget):
 
     def cancel_payment(self):
         if self.stacked_widget:
-            previous_page_index = self.stacked_widget.currentIndex() - 2
+            previous_page_index = self.stacked_widget.currentIndex() - 3
             self.stacked_widget.setCurrentIndex(previous_page_index)
 
     def save_booking_as_text(self):
         try:
-            file_path, _ = QFileDialog.getSaveFileName(self, "Save Booking as Text", f"{self.user_name}_bookingconfirmation.txt",
-                                                       "Text Files (*.txt)")
+            file_path, _ = QFileDialog.getSaveFileName(self, "Save Booking as Text",
+                            f"{self.user_name}_bookingconfirmation.txt", "Text Files (*.txt)")
             if file_path:
                 with open(file_path, "w") as file:
                     file.write(f"Name: {self.user_name}\n")
@@ -184,18 +185,22 @@ class PaymentPage(QWidget):
                     file.write(f"Cabin Type: {self.cabin_type}\n")
                     file.write(f"Price: {self.cabin_price} €\n")
                     file.write(
-                        f"Address: {self.street_input.text().strip()}, {self.postal_code_input.text().strip()} {self.city_input.text().strip()}, Germany\n")
+                        f"Address: {self.street_input.text().strip()}, "
+                        f"{self.postal_code_input.text().strip()} {self.city_input.text().strip()}, Germany\n")
                     file.write(f"Phone: {self.phone_input.text().strip()}\n")
                     file.write(f"Payment Method: {self.payment_method_combo.currentText()}\n")
                     if hasattr(self, 'payment_input'):
                         file.write(f"Bank Details: {self.payment_input.text().strip()}\n")
                     if hasattr(self, 'card_number_input') and hasattr(self, 'cvv_input'):
                         file.write(
-                            f"Card Number: {self.card_number_input.text().strip()} (CVV: {self.cvv_input.text().strip()})\n")
+                            f"Card Number: {self.card_number_input.text().strip()} (CVV:"
+                            f" {self.cvv_input.text().strip()})\n")
                     if hasattr(self, 'paypal_email_input'):
                         file.write(f"PayPal Email: {self.paypal_email_input.text().strip()}\n")
 
                 show_success_message("Saved", "Booking details have been saved successfully!")
+                if self.stacked_widget:
+                    self.stacked_widget.setCurrentWidget(self.stacked_widget.widget(0))
 
         except Exception as e:
             show_warning_message("Error", f"An error occurred while saving the booking: {e}")
