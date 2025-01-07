@@ -188,12 +188,10 @@ class ReisezeitPage(QWidget):
         departure_date = self.departure_date_edit.date()
         return_date = self.return_date_edit.date()
         minimum_return_date = departure_date.addDays(5)
-        #nights = self.selected_trip_data.get('Übernachtungen')
-        #calculated_return_date = self.departure_date_edit.date().addDays(nights)
-       #if return_date < calculated_return_date:
-        if return_date < minimum_return_date:
-            #show_return_date_error("Invalid Return Date","The selected return date is incompatible.",f"The return date must account for the number of nights of your trip.\n"
-        #f"The minimum return date should be: {calculated_return_date.toString('dd-MM-yyyy')}.")
+        nights = self.trip_data.get('Übernachtungen')
+        maxi_return_date =departure_date.addDays(nights)
+        if return_date < minimum_return_date :
+
             show_return_date_error(
                 "Invalid Return Date",
                 "The selected return date is incompatible.",
@@ -202,9 +200,16 @@ class ReisezeitPage(QWidget):
             )
             self.return_date_edit.setDate(minimum_return_date)
             return_date = minimum_return_date
+        if return_date > maxi_return_date:
+            show_return_date_error(
+                "Invalid Return Date",
+                "The selected return date is incompatible with the calculated return date according with the number of night.\n",
+                f"The maximal return date should be: {maxi_return_date.toString('dd-MM-yyyy')}."
 
-            #return_date = calculated_return_date
-            #self.return_date_edit.setDate(return_date)
+            )
+            self.return_date_edit.setDate(maxi_return_date)
+            return_date = maxi_return_date
+
         departure_date_str = departure_date.toString("dd-MM-yyyy")
 
         return_date_str = return_date.toString("dd-MM-yyyy")
@@ -213,7 +218,7 @@ class ReisezeitPage(QWidget):
         self.reisezeit_confirm_button.setEnabled(True)
         self.reisezeit_confirm_button.setStyleSheet(confirmbtnstyle)
 
-        print(f"Dates validées : Departure: {departure_date_str}, Return: {return_date}")
+        print(f"Dates valid : Departure: {departure_date_str}, Return: {return_date}")
 
 
     def on_cancel_date_clicked(self):
@@ -224,7 +229,6 @@ class ReisezeitPage(QWidget):
         self.return_date_edit.setDate(QDate(2025, 5, 2))
         previous_page_index = self.stacked_widget.currentIndex() - 2
         self.stacked_widget.setCurrentIndex(previous_page_index)
-        #self.stacked_widget.setCurrentWidget(self.selection_page)
 
 
     def update_gekauft_container(self, departure_date, return_date):

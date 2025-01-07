@@ -1,8 +1,8 @@
 Name: suzie
-Trip Number: 5
-Cabin Type: Innenkabine
-Price: 789 €
-Address: suzui 7, 12453 wirmd, Germany
-Phone: 099876543212346
+Trip Number: 14
+Cabin Type: Luxuskabine3
+Price: 4999 €
+Address: hdgztt 6, 12345 Worms, Germany
+Phone: 0987654321123344556
 Payment Method: Bank Transfer
-Bank Details: LT34567890123478234567
+Bank Details: LK12345678909876512345
