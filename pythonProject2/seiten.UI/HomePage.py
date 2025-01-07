@@ -27,6 +27,8 @@ class TravelApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("BlauWelle")
+        self.setWindowIcon(QIcon("../icon/logo_schiff.png"))
+
         screen = QApplication.primaryScreen()
         screen_geometry = screen.geometry()
         screen_width = screen_geometry.width()
