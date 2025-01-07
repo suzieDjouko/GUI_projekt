@@ -219,15 +219,13 @@ class TravelApp(QMainWindow):
         self.nights_spin.valueChanged.connect(self.on_filters_changed)
         nights_layout.addWidget(QLabel("Number of Nights :"))
         nights_layout.addWidget(self.nights_spin)
-        #selection_layout.addLayout(self.nights_spin)
         selection_layout.addLayout(nights_layout)
 
         # Sektion Städte
-        #selection_layout = QVBoxLayout()
         city_title = QLabel("Cities: ")
-       # city_title.setObjectName("city_title")
         selection_layout.addWidget(city_title)
         self.city_scroll_area = QScrollArea()
+        self.city_scroll_area.setMinimumHeight(450)
         self.city_selection_widget = self.create_city_selection()
         self.city_scroll_area.setContentsMargins(0, 0, 0, 30)
         self.city_scroll_area.setWidget(self.city_selection_widget)
@@ -235,12 +233,10 @@ class TravelApp(QMainWindow):
         self.city_scroll_area.verticalScrollBar().setStyleSheet(city_section_style)
         selection_layout.addWidget(self.city_scroll_area)
 
-        #self.selection_page.setLayout(selection_layout)
 
         # Sektion Schiffstypen
         ship_selection_layout = QHBoxLayout()
         ship_selection_layout.setContentsMargins(0, 0, 0, 20)
-        #self.ship_combo = QComboBox()
         self.ship_combo.addItem("Choose a Ship")
         self.load_ship_types()
         self.ship_combo.setStyleSheet(style_box)
@@ -248,7 +244,7 @@ class TravelApp(QMainWindow):
 
 
         self.ship_image_label = QLabel()
-        self.ship_image_label.setFixedSize(300, 250)
+        self.ship_image_label.setFixedSize(280, 250)
         self.ship_image_label.setAlignment(Qt.AlignCenter)
         self.ship_image_label.setStyleSheet("border: 1px solid #60a698;")
 
@@ -273,7 +269,6 @@ class TravelApp(QMainWindow):
         buttons_layout.addWidget(reset_button)
         buttons_layout.addWidget(search_button)
 
-        selection_layout.addLayout(buttons_layout)
 
         self.selection_widget = QWidget()
         self.selection_widget.setLayout(selection_layout)
@@ -286,7 +281,7 @@ class TravelApp(QMainWindow):
 
         selection_page_layout = QVBoxLayout(self.selection_page)
         selection_page_layout.addWidget(self.selection_scroll_Area)
-
+        selection_page_layout.addLayout(buttons_layout)
 
         ##SEITE ERGEBNIS
         self.result_layout = QVBoxLayout()
@@ -619,7 +614,6 @@ class TravelApp(QMainWindow):
             if filename.lower().endswith((".png", ".jpg", ".jpeg")):
                 ship_name = filename.split(" ")[-1].split(".")[0]  # Exemple: "A" de "Schiffstyp A.jpg"
 
-                #ship_name = filename.split(".")[0]  # Nom sans extension
                 self.ship_combo.addItem(ship_name)
 
     def display_selected_ship_image(self, ship_name):
@@ -662,8 +656,7 @@ class TravelApp(QMainWindow):
 
             btn.setIcon(QIcon(f"../images/Hafenstaedte/{city}.jpg"))  # Chemin des images
 
-            btn.setIconSize(QSize(300, 250))  # Taille de l'image
-            btn.setStyleSheet(city_section_style)
+            btn.setIconSize(QSize(280, 250))  # Taille de l'image
 
             btn.clicked.connect(lambda _, c=city, b=btn: self.toggle_city_selection(c, b))
 

@@ -170,7 +170,6 @@ class LoginRegisterPage(QMainWindow):
             self.main_page = TravelApp()
             self.main_page.header_user_name_edit.setText(f"{username}")
             self.main_page.kontostand_amont_edit.setText(f"{new_kontostand}€")
-            #self.main_page.set_current_user(user_id, username, new_kontostand)
             self.main_page.show()
             self.close()  # close loginpage
 

@@ -147,6 +147,7 @@ QPushButton:checked {
     border: 2px solid #0078A4;
 }
 """
+
 reset_button_style = """
     QPushButton {
         background-color: #F0F8FF;
