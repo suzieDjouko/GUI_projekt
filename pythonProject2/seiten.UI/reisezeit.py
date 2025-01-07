@@ -160,29 +160,6 @@ class ReisezeitPage(QWidget):
         """
         self.return_date_edit.setMinimumDate(date.addDays(1))  # Das Rückreisedatum muss mindestens 1 Tag später liegen
 
-    def confirm_selection(self):
-        """
-        Bestätigt die gewählten Daten.
-        """
-        departure_date = self.departure_date_edit.date().toString("yyyy-MM-dd")
-        return_date = self.return_date_edit.date().toString("yyyy-MM-dd")
-
-        if self.return_date_edit.date() <= self.departure_date_edit.date():
-            QMessageBox.warning(self, "Error", "The return date must be after the departure date.")
-            return
-
-        QMessageBox.information(
-            self,
-            "Confirmation",
-            f"Dates confirmed:\nDeparture: {departure_date}\nReturn: {return_date}"
-        )
-        self.stacked_widget.setCurrentWidget(self.payment_page)  # Zur Zahlungsseite navigieren
-
-    def go_back(self):
-        """
-        Kehrt zur vorherigen Seite zurück.
-        """
-        self.stacked_widget.setCurrentWidget(self.cabin_page)
 
     def on_validate_date_clicked(self):
         departure_date = self.departure_date_edit.date()
