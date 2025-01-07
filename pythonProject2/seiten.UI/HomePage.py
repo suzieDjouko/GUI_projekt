@@ -33,11 +33,9 @@ class TravelApp(QMainWindow):
         screen_height = screen_geometry.height()
 
         # Die Größe des Fensters auf 80% der Bildschirmgröße ändern
-        self.resize(int(screen_width * 0.8), int(screen_height * 0.8))  # Convertir en entiers
+        self.setMinimumSize(int(screen_width * 0.4), int(screen_height * 0.4))
 
-        # Mindestmaße festlegen, um zu verhindern, dass das Fenster zu klein wird
-        self.setMinimumSize(800, 600)
-
+        self.resize(int(screen_width * 0.8), int(screen_height * 0.8))
 
 
         # Excel-Daten laden
@@ -291,7 +289,7 @@ class TravelApp(QMainWindow):
 
 
         self.ship_image_label = QLabel()
-        self.ship_image_label.setFixedSize(300, 250)
+        self.ship_image_label.setFixedSize(250, 200)
         self.ship_image_label.setAlignment(Qt.AlignCenter)
         self.ship_image_label.setStyleSheet("border: 1px solid #60a698;")
 
@@ -693,7 +691,7 @@ class TravelApp(QMainWindow):
 
             btn.setIcon(QIcon(f"../images/Hafenstaedte/{city}.jpg"))  # Chemin des images
 
-            btn.setIconSize(QSize(300, 250))  # Taille de l'image
+            btn.setIconSize(QSize(280, 200))  # Taille de l'image
             btn.setStyleSheet(city_section_style)
 
             btn.clicked.connect(lambda _, c=city, b=btn: self.toggle_city_selection(c, b))
