@@ -36,7 +36,7 @@ class TravelApp(QMainWindow):
         self.resize(int(screen_width * 0.8), int(screen_height * 0.8))
 
         # Mindestmaße festlegen, um zu verhindern, dass das Fenster zu klein wird
-        self.setMinimumSize(int(screen_width * 0.5), int(screen_height * 0.7))
+        self.setMinimumSize(int(screen_width * 0.4), int(screen_height * 0.5))
 
         # Excel-Daten laden
         self.data_file = "../Schiffsreisen_cleaned.xlsx"
