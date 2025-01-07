@@ -22,9 +22,9 @@ def is_valid_phone(phone):
     pattern = r"^(\+49|0)\s?[0-9]{9,}$"
     return re.match(pattern, phone) is not None
 def is_valid_bank_details(bank_details):
-    #^DE[0-9]{20}$
+    #"^[A-Za-z0-9\s\-]+$"
     #pattern = r"^[A-Z]{2}[0-9]{2}[A-Za-z0-9\s\-]+$"
-    pattern = r"^[A-Za-z0-9\s\-]+$"
+    pattern = r"^[A-Z]{2}[0-9]{20}$"
     return re.match(pattern, bank_details) is not None
 def is_valid_credit_card(credit_card):
 

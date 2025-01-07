@@ -1,23 +1,20 @@
 import os
-
 from PyQt5.QtCore import QDate, Qt
 from PyQt5.QtGui import QPixmap, QTextCharFormat, QColor
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QDateEdit, QHBoxLayout, QPushButton, QMessageBox, QFrame, QScrollArea, QStackedWidget
 )
-from styles import Datestyle , validbtnstyle ,cancelstyle,back_button_style,confirmbtnstyledisable,confirmbtnstyle
-from checking_funktion import show_return_date_error , clear_layout
+from styles import Datestyle, validbtnstyle, cancelstyle, back_button_style, confirmbtnstyledisable, confirmbtnstyle
+from checking_funktion import show_return_date_error, clear_layout
 from payments import PaymentPage
 from database_action import get_user_balance
 
-
-
 class ReisezeitPage(QWidget):
-    def __init__(self,trip_data, cabin_type, cabin_price, user_balance,user_name, stacked_widget, konto_edit, payment_page, cabin_page,parent=None):
+    def __init__(self, trip_data, cabin_type, cabin_price, user_balance, user_name, stacked_widget, konto_edit, payment_page, cabin_page, parent=None):
         super().__init__()
         self.stacked_widget = stacked_widget
         self.payment_page = payment_page
-        self.cabin_page = cabin_page        #self.filtered_results = df
+        self.cabin_page = cabin_page
         self.trip_data = trip_data
         self.cabin_type = cabin_type
         self.cabin_price = cabin_price
@@ -32,24 +29,24 @@ class ReisezeitPage(QWidget):
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
 
-
+        # Create scroll area and scrollable widget
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-
-        # Container für scrollbare Inhalte
         scrollable_widget = QWidget()
+        scrollable_layout = QVBoxLayout(scrollable_widget)
 
+        # Trip Details Label
         self.trip_details_label = QLabel()
         self.trip_details_label.setStyleSheet("font-size: 18px; margin-bottom: 20px;")
-        layout.addWidget(self.trip_details_label)
+        scrollable_layout.addWidget(self.trip_details_label)
 
-        # Abschnitt für Städte
-        layout.addWidget(QLabel("Cities Included in Your Trip:"))
+        # Cities Included in Your Trip
+        scrollable_layout.addWidget(QLabel("Cities Included in Your Trip:"))
         self.city_scroll_area = QScrollArea()
         self.city_scroll_area.setWidgetResizable(True)
-        layout.addWidget(self.city_scroll_area)
+        scrollable_layout.addWidget(self.city_scroll_area)
 
-        # Bilder von Bootstypen und Kabinen
+        # Ship and Cabin Images
         self.ship_cabin_layout = QHBoxLayout()
 
         ship_layout = QVBoxLayout()
@@ -68,27 +65,28 @@ class ReisezeitPage(QWidget):
         cabin_layout.addWidget(self.cabin_image_label)
         self.ship_cabin_layout.addLayout(cabin_layout)
 
-        layout.addLayout(self.ship_cabin_layout)
+        scrollable_layout.addLayout(self.ship_cabin_layout)
 
-        # Datum der Abreise
-        layout.addWidget(QLabel("Departure Date:"))
+        # Departure Date
+        scrollable_layout.addWidget(QLabel("Departure Date:"))
         self.departure_date_edit = QDateEdit()
         self.departure_date_edit.setStyleSheet(Datestyle)
         self.departure_date_edit.setCalendarPopup(True)
         self.departure_date_edit.setMinimumDate(QDate(2025, 5, 1))
         self.departure_date_edit.setMaximumDate(QDate(2025, 10, 31))
         self.departure_date_edit.dateChanged.connect(self.on_departure_date_changed)
-        layout.addWidget(self.departure_date_edit)
+        scrollable_layout.addWidget(self.departure_date_edit)
 
-        # Datum der Rückkehr
-        layout.addWidget(QLabel("Return Date:"))
+        # Return Date
+        scrollable_layout.addWidget(QLabel("Return Date:"))
         self.return_date_edit = QDateEdit()
         self.return_date_edit.setStyleSheet(Datestyle)
         self.return_date_edit.setCalendarPopup(True)
         self.return_date_edit.setMinimumDate(QDate(2025, 5, 2))
         self.return_date_edit.setMaximumDate(QDate(2025, 10, 31))
-        layout.addWidget(self.return_date_edit)
+        scrollable_layout.addWidget(self.return_date_edit)
 
+        # Date Buttons
         date_button_layout = QHBoxLayout()
         date_button_layout.addStretch()
 
@@ -104,11 +102,9 @@ class ReisezeitPage(QWidget):
         self.cancel_date_button.clicked.connect(self.on_cancel_date_clicked)
         date_button_layout.addWidget(self.cancel_date_button)
 
-        layout.addLayout(date_button_layout)
+        scrollable_layout.addLayout(date_button_layout)
 
-        # Abschnitt für gekaufte Reisen
-
-        layout.addWidget(QLabel("<b>Purchased Products</b>"))
+        # Purchased Products Section
         self.gekauft_scroll_area = QScrollArea()
         self.gekauft_scroll_area.setWidgetResizable(True)
 
@@ -117,16 +113,19 @@ class ReisezeitPage(QWidget):
         self.gekauft_container = QWidget()
 
         self.gekauft_layout = QVBoxLayout(self.gekauft_container)
-        # self.gekauft_layout.addLayout(self.date_layout)
         self.gekauft_layout.setContentsMargins(20, 10, 20, 10)
         self.gekauft_layout.setSpacing(15)
 
         self.gekauft_scroll_area.setWidget(self.gekauft_container)
+
+        # Set scrollable_widget as the widget of scroll_area
+        scroll_area.setWidget(scrollable_widget)
+        layout.addWidget(scroll_area)
+        layout.addWidget(QLabel("<b>Purchased Products</b>"))
         layout.addWidget(self.gekauft_scroll_area)
 
-        scroll_area.setWidget(scrollable_widget)
-        ############self.reisezeit_page_layout.addWidget(scroll_area)
 
+        # Bottom Buttons
         button_layout = QHBoxLayout()
         self.reisezeit_return_button = QPushButton("Return")
         self.reisezeit_return_button.setStyleSheet(back_button_style)
@@ -135,16 +134,12 @@ class ReisezeitPage(QWidget):
         self.reisezeit_confirm_button = QPushButton("Confirm")
         self.reisezeit_confirm_button.setEnabled(False)
         self.reisezeit_confirm_button.setStyleSheet(confirmbtnstyledisable)
-
         self.reisezeit_confirm_button.clicked.connect(self.on_confirm_date_selection)
 
         button_layout.addWidget(self.reisezeit_return_button)
         button_layout.addWidget(self.reisezeit_confirm_button)
 
         layout.addLayout(button_layout)
-
-        # Seite Reisezeit einrichten
-        #########self.reisezeit_page.setLayout(self.reisezeit_page_layout)
 
         self.setLayout(layout)
 

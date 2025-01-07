@@ -1,8 +1,8 @@
 Name: suzie
-Trip Number: 3
-Cabin Type: Aussenkabine
-Price: 578 €
-Address: ,  , Germany
-Phone: 
+Trip Number: 4
+Cabin Type: Innenkabine
+Price: 1890 €
+Address: tdjtdghtd 45, 45896 fsafs, Germany
+Phone: 0468656545686
 Payment Method: Bank Transfer
-Bank Details: 
+Bank Details: DE45454545454545454545

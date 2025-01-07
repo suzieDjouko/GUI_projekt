@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QComboBox, QHBoxLayout, QLabel, QPushButton
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QComboBox, QHBoxLayout, QLabel, QPushButton, QScrollArea
 from styles import *
 from checking_funktion import *
 from database_action import update_user_balance
@@ -22,60 +22,63 @@ class PaymentPage(QWidget):
         layout = QVBoxLayout()
         layout.setSpacing(20)
 
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scrollable_widget = QWidget()
+        scrollable_layout = QVBoxLayout(scrollable_widget)
+
+
+
         # Résumé des informations
-        layout.addWidget(QLabel(f"<b>Trip Number:</b> {trip_data['Reisenummer']}"))
-        layout.addWidget(QLabel(f"<b>Cabin Type:</b> {cabin_type}"))
-        layout.addWidget(QLabel(f"<b>Price:</b> {int(cabin_price)} €"))
-        layout.addWidget(QLabel(f"<b>Remaining Balance:</b> {int(user_balance - cabin_price)} €"))
+        scrollable_layout.addWidget(QLabel(f"<b>Trip Number:</b> {trip_data['Reisenummer']}"))
+        scrollable_layout.addWidget(QLabel(f"<b>Cabin Type:</b> {cabin_type}"))
+        scrollable_layout.addWidget(QLabel(f"<b>Price:</b> {int(cabin_price)} €"))
+        scrollable_layout.addWidget(QLabel(f"<b>Remaining Balance:</b> {int(user_balance - cabin_price)} €"))
 
         # Champs utilisateur avec labels
-        layout.addWidget(QLabel("Street and Number:"))
+        scrollable_layout.addWidget(QLabel("Street and Number:"))
         self.street_input = self.create_input_field("Enter your street and number")
-        layout.addWidget(self.street_input)
+        scrollable_layout.addWidget(self.street_input)
         self.street_input.textChanged.connect(self.validate_fields)
 
-        layout.addWidget(QLabel("Postal Code:"))
+        scrollable_layout.addWidget(QLabel("Postal Code:"))
         self.postal_code_input = self.create_input_field("Enter your postal code")
-        layout.addWidget(self.postal_code_input)
+        scrollable_layout.addWidget(self.postal_code_input)
         self.postal_code_input.textChanged.connect(self.validate_fields)
 
-        layout.addWidget(QLabel("City:"))
+        scrollable_layout.addWidget(QLabel("City:"))
         self.city_input = self.create_input_field("Enter your city")
-        layout.addWidget(self.city_input)
+        scrollable_layout.addWidget(self.city_input)
         self.city_input.textChanged.connect(self.validate_fields)
 
-        layout.addWidget(QLabel("Phone:"))
+        scrollable_layout.addWidget(QLabel("Phone:"))
         self.phone_input = self.create_input_field("Enter your phone number")
-        layout.addWidget(self.phone_input)
+        scrollable_layout.addWidget(self.phone_input)
         self.phone_input.textChanged.connect(self.validate_fields)
 
         # Pays (readonly)
-        layout.addWidget(QLabel("Country:"))
+        scrollable_layout.addWidget(QLabel("Country:"))
         self.country_input = QLineEdit("Germany")
         self.country_input.setReadOnly(True)
         self.country_input.setStyleSheet(loginmainstyle)
-        layout.addWidget(self.country_input)
+        scrollable_layout.addWidget(self.country_input)
 
         # Méthode de paiement
-        layout.addWidget(QLabel("Payment Method:"))
+        scrollable_layout.addWidget(QLabel("Payment Method:"))
         self.payment_method_combo = QComboBox()
         self.payment_method_combo.setStyleSheet(style_box)
         self.payment_method_combo.addItems(["Bank Transfer", "Credit Card", "PayPal"])
-        layout.addWidget(self.payment_method_combo)
+        scrollable_layout.addWidget(self.payment_method_combo)
         self.payment_method_combo.currentTextChanged.connect(self.update_payment_fields)
 
         # Champs dynamiques pour la méthode de paiement
         self.dynamic_payment_layout = QVBoxLayout()
-        layout.addLayout(self.dynamic_payment_layout)
+        scrollable_layout.addLayout(self.dynamic_payment_layout)
         self.update_payment_fields()
 
         # Boutons
         button_layout = QHBoxLayout()
 
-        self.save_button = QPushButton("Save as Text")
-        self.save_button.setStyleSheet(validbtnstyle)
-        self.save_button.clicked.connect(self.save_booking_as_text)
-        button_layout.addWidget(self.save_button)
 
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.setStyleSheet(cancelstyle)
@@ -87,6 +90,9 @@ class PaymentPage(QWidget):
         self.confirm_button.setStyleSheet(confirmbtnstyledisable)
         self.confirm_button.clicked.connect(self.confirm_purchase)
         button_layout.addWidget(self.confirm_button)
+
+        scroll_area.setWidget(scrollable_widget)
+        layout.addWidget(scroll_area)
 
         layout.addLayout(button_layout)
 
@@ -165,6 +171,13 @@ class PaymentPage(QWidget):
 
             show_success_message("Purchase Confirmed", "Your booking has been successfully completed!")
 
+            self.save_booking_as_text()
+
+            show_success_message("Saved", "Booking details have been saved successfully!")
+            if self.stacked_widget:
+                self.stacked_widget.setCurrentWidget(self.stacked_widget.widget(0))
+
+
         except Exception as e:
             show_warning_message("Error", f"An error occurred during the purchase: {e}")
 
@@ -196,10 +209,6 @@ class PaymentPage(QWidget):
                             f" {self.cvv_input.text().strip()})\n")
                     if hasattr(self, 'paypal_email_input'):
                         file.write(f"PayPal Email: {self.paypal_email_input.text().strip()}\n")
-
-                show_success_message("Saved", "Booking details have been saved successfully!")
-                if self.stacked_widget:
-                    self.stacked_widget.setCurrentWidget(self.stacked_widget.widget(0))
 
         except Exception:
             return
