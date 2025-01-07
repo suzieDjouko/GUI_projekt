@@ -1,3 +1,42 @@
+style_user_logout = """
+QPushButton{
+    border: none;
+    border-radius: 30px;
+    padding: 10px;
+    }
+    QPushButton:hover{
+    background-color: #D0292C;             
+    }
+"""
+style_user_logo = """
+QPushButton{
+    border: none;
+    border-radius: 30px;
+    padding: 10px;
+    }
+    QPushButton:hover{
+    background-color: green;             
+    }
+"""
+style_main = """
+    QLabel{
+        font-size:20px;
+    }
+    QLineEdit{
+        font-size:24px;
+        border: none;
+        background-color:transparent;
+    }
+"""
+style_logo = """
+    QLabel{
+        background-color:blue;
+        border:none;
+        border-radius:30px;
+        padding: 10px;
+    }
+"""
+
 
 style_box = """
 QComboBox {
@@ -77,14 +116,15 @@ QScrollArea {
     background-color: #F0F8FF;
 }
 
-QScrollBar:vertical {
+QScrollBar:vertical , QScrollBar:horizontal{
     border: none;
     background: #D9F1FF;
     width: 10px;
     margin: 0px 0px 0px 0px;
 }
 
-QScrollBar::handle:vertical {
+
+QScrollBar::handle:vertical , QScrollBar::handle:horizontal {
     background: #60a698;
     min-height: 30px;
     border-radius: 5px;
@@ -92,6 +132,7 @@ QScrollBar::handle:vertical {
 
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     background: none;
+    
 }
 
 QPushButton {

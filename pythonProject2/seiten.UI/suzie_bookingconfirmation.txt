@@ -1,8 +1,8 @@
 Name: suzie
-Trip Number: 4
+Trip Number: 5
 Cabin Type: Innenkabine
-Price: 1890 €
-Address: tdjtdghtd 45, 45896 fsafs, Germany
-Phone: 0468656545686
+Price: 789 €
+Address: suzui 7, 12453 wirmd, Germany
+Phone: 099876543212346
 Payment Method: Bank Transfer
-Bank Details: DE45454545454545454545
+Bank Details: LT34567890123478234567

@@ -18,24 +18,24 @@ class PaymentPage(QWidget):
         self.stacked_widget = stacked_widget
         self.konto_edit = konto_edit
 
-        # Layout principal
+
         layout = QVBoxLayout()
         layout.setSpacing(20)
 
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
+        scroll_area.verticalScrollBar().setStyleSheet(city_section_style)
+
         scrollable_widget = QWidget()
         scrollable_layout = QVBoxLayout(scrollable_widget)
+        scroll_area.setWidget(scrollable_widget)
 
 
-
-        # Résumé des informations
         scrollable_layout.addWidget(QLabel(f"<b>Trip Number:</b> {trip_data['Reisenummer']}"))
         scrollable_layout.addWidget(QLabel(f"<b>Cabin Type:</b> {cabin_type}"))
         scrollable_layout.addWidget(QLabel(f"<b>Price:</b> {int(cabin_price)} €"))
         scrollable_layout.addWidget(QLabel(f"<b>Remaining Balance:</b> {int(user_balance - cabin_price)} €"))
 
-        # Champs utilisateur avec labels
         scrollable_layout.addWidget(QLabel("Street and Number:"))
         self.street_input = self.create_input_field("Enter your street and number")
         scrollable_layout.addWidget(self.street_input)
@@ -63,7 +63,6 @@ class PaymentPage(QWidget):
         self.country_input.setStyleSheet(loginmainstyle)
         scrollable_layout.addWidget(self.country_input)
 
-        # Méthode de paiement
         scrollable_layout.addWidget(QLabel("Payment Method:"))
         self.payment_method_combo = QComboBox()
         self.payment_method_combo.setStyleSheet(style_box)
@@ -71,12 +70,10 @@ class PaymentPage(QWidget):
         scrollable_layout.addWidget(self.payment_method_combo)
         self.payment_method_combo.currentTextChanged.connect(self.update_payment_fields)
 
-        # Champs dynamiques pour la méthode de paiement
         self.dynamic_payment_layout = QVBoxLayout()
         scrollable_layout.addLayout(self.dynamic_payment_layout)
         self.update_payment_fields()
 
-        # Boutons
         button_layout = QHBoxLayout()
 
 
@@ -91,11 +88,8 @@ class PaymentPage(QWidget):
         self.confirm_button.clicked.connect(self.confirm_purchase)
         button_layout.addWidget(self.confirm_button)
 
-        scroll_area.setWidget(scrollable_widget)
         layout.addWidget(scroll_area)
-
         layout.addLayout(button_layout)
-
         self.setLayout(layout)
 
     def create_input_field(self, placeholder):
@@ -212,4 +206,3 @@ class PaymentPage(QWidget):
 
         except Exception:
             return
-            #show_warning_message("Error", f"An error occurred while saving the booking: {e}")

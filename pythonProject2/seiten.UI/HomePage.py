@@ -33,20 +33,18 @@ class TravelApp(QMainWindow):
         screen_height = screen_geometry.height()
 
         # Die Größe des Fensters auf 80% der Bildschirmgröße ändern
-        self.resize(int(screen_width * 0.8), int(screen_height * 0.8))  # Convertir en entiers
+        self.resize(int(screen_width * 0.8), int(screen_height * 0.8))
 
         # Mindestmaße festlegen, um zu verhindern, dass das Fenster zu klein wird
-        self.setMinimumSize(800, 600)
-
-
+        self.setMinimumSize(int(screen_width * 0.5), int(screen_height * 0.7))
 
         # Excel-Daten laden
-        self.data_file = "../Schiffsreisen_cleaned.xlsx"  # Remplacez par le chemin correct
+        self.data_file = "../Schiffsreisen_cleaned.xlsx"
         self.df = load_data(self.data_file, self)
 
         # Ordnerpfade festlegen
-        self.schiffstyp_folder = "../images/Schiffstypen"  # Types de navires
-        # Sélections de l'utilisateur
+        self.schiffstyp_folder = "../images/Schiffstypen"
+
         self.ship_combo = QComboBox(self)
         self.selected_cities = set()
 
@@ -55,17 +53,7 @@ class TravelApp(QMainWindow):
 
 
     def init_ui(self):
-        self.setStyleSheet(
-            """
-            QLabel{
-                font-size:20px;
-                }
-            QLineEdit{
-                font-size:24px;
-                border: none;
-                background-color:transparent;
-            }
-                }""")
+        self.setStyleSheet(style_main)
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
         spacer = QSpacerItem(10, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -77,14 +65,7 @@ class TravelApp(QMainWindow):
         self.header_logo_label = QLabel()
         self.header_logo_label.setFixedSize(60, 60)
         self.header_logo = QPixmap("../icon/logo_schiff.png")
-        self.header_logo_label.setStyleSheet(""" 
-                   QLabel{ 
-                       background-color:blue;
-                       border:none;
-                       border-radius:30px;
-                       padding: 10px;
-                       }
-                   """)
+        self.header_logo_label.setStyleSheet(style_logo)
         self.header_logo_label.setPixmap(self.header_logo)
         self.header_logo_label.setScaledContents(True)
 
@@ -98,19 +79,7 @@ class TravelApp(QMainWindow):
         self.header_user_logo_btn.setIcon(QIcon("../icon/userlogo.svg"))
         self.header_user_logo_btn.setIconSize(QSize(50, 50))
         self.header_user_logo_btn.setFixedSize(60, 60)
-        self.header_user_logo_btn.setStyleSheet(
-            """
-            QPushButton{
-                border: none;
-                border-radius: 30px;
-                padding: 10px;
-
-            }
-            QPushButton:hover{
-                background-color: green;             
-            }
-            """
-        )
+        self.header_user_logo_btn.setStyleSheet(style_user_logo)
         self.header_user_logo_btn.clicked.connect(lambda: [
             self.on_user_logo_clicked(),
             self.stacked_widget.setCurrentWidget(self.user_profil)
@@ -118,7 +87,6 @@ class TravelApp(QMainWindow):
         self.header_user_name_edit = QLineEdit()
         self.header_user_name_edit.setText("Username:")
         self.header_user_name_edit.setFixedHeight(40)
-        #self.header_user_name_edit.setStyleSheet("QLineEdit {font-size: 24px; border: none; background: transparent;}")
         self.header_user_name_edit.setFocusPolicy(Qt.NoFocus)
         self.header_user_name_edit.setReadOnly(True)
         self.header_user_name_edit.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
@@ -161,19 +129,7 @@ class TravelApp(QMainWindow):
         self.header_logo_logout_button.setIcon(QIcon("../icon/logout.svg"))
         self.header_logo_logout_button.setIconSize(QSize(50, 50))
         self.header_logo_logout_button.setFixedSize(60, 60)
-        self.header_logo_logout_button.setStyleSheet(
-            """
-            QPushButton{
-                border: none;
-                border-radius: 30px;
-                padding: 10px;
-
-            }
-            QPushButton:hover{
-                background-color: #D0292C;             
-            }
-            """
-        )
+        self.header_logo_logout_button.setStyleSheet(style_user_logout)
         self.header_logo_logout_button.clicked.connect(self.close)
 
         self.headerLayout.setSpacing(30)
@@ -236,7 +192,6 @@ class TravelApp(QMainWindow):
         ##AUSWAHLSEITE
 
         selection_layout = QVBoxLayout()
-
 
         # Sektion Seetyps
         sea_selection_layout = QHBoxLayout()
@@ -318,6 +273,18 @@ class TravelApp(QMainWindow):
 
         selection_layout.addLayout(buttons_layout)
 
+        self.selection_widget = QWidget()
+        self.selection_widget.setLayout(selection_layout)
+
+        self.selection_scroll_Area = QScrollArea()
+        self.selection_scroll_Area.verticalScrollBar().setStyleSheet(city_section_style)
+
+        self.selection_scroll_Area.setWidgetResizable(True)
+        self.selection_scroll_Area.setWidget(self.selection_widget)
+
+        selection_page_layout = QVBoxLayout(self.selection_page)
+        selection_page_layout.addWidget(self.selection_scroll_Area)
+
 
         ##SEITE ERGEBNIS
         self.result_layout = QVBoxLayout()
@@ -334,7 +301,6 @@ class TravelApp(QMainWindow):
         self.result_page.setLayout(self.result_layout)
 
         #SEITE KABINEN
-        #self.cabintype_folder = "../images/Kabinentypen"
 
         self.cabin_layout = QVBoxLayout()
 
@@ -347,6 +313,8 @@ class TravelApp(QMainWindow):
         back_button.clicked.connect(self.on_back_to_results_clicked)  # Connecter au retour
 
         self.cabin_scroll_area = QScrollArea()
+        self.cabin_scroll_area.verticalScrollBar().setStyleSheet(city_section_style)
+
         self.cabin_scroll_area.setWidgetResizable(True)
 
 
@@ -536,7 +504,6 @@ class TravelApp(QMainWindow):
         self.cabin_summary_label.setText(trip_details)
 
         self.selected_trip_data = row_data
-
 
         self.display_selected_ship_image(row_data['Schiffstyp'])
         self.display_cabin_images(row_data)

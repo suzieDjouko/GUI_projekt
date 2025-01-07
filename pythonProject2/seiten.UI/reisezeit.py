@@ -8,6 +8,7 @@ from styles import Datestyle, validbtnstyle, cancelstyle, back_button_style, con
 from checking_funktion import show_return_date_error, clear_layout
 from payments import PaymentPage
 from database_action import get_user_balance
+from styles import city_section_style
 
 class ReisezeitPage(QWidget):
     def __init__(self, trip_data, cabin_type, cabin_price, user_balance, user_name, stacked_widget, konto_edit, payment_page, cabin_page, parent=None):
@@ -31,6 +32,8 @@ class ReisezeitPage(QWidget):
 
         # Create scroll area and scrollable widget
         scroll_area = QScrollArea()
+        scroll_area.verticalScrollBar().setStyleSheet(city_section_style)
+
         scroll_area.setWidgetResizable(True)
         scrollable_widget = QWidget()
         scrollable_layout = QVBoxLayout(scrollable_widget)
@@ -43,6 +46,10 @@ class ReisezeitPage(QWidget):
         # Cities Included in Your Trip
         scrollable_layout.addWidget(QLabel("Cities Included in Your Trip:"))
         self.city_scroll_area = QScrollArea()
+        self.city_scroll_area.verticalScrollBar().setStyleSheet(city_section_style)
+        self.city_scroll_area.horizontalScrollBar().setStyleSheet(city_section_style)
+
+
         self.city_scroll_area.setWidgetResizable(True)
         scrollable_layout.addWidget(self.city_scroll_area)
 
@@ -106,6 +113,8 @@ class ReisezeitPage(QWidget):
 
         # Purchased Products Section
         self.gekauft_scroll_area = QScrollArea()
+        self.gekauft_scroll_area.verticalScrollBar().setStyleSheet(city_section_style)
+
         self.gekauft_scroll_area.setWidgetResizable(True)
 
         self.date_layout = QVBoxLayout()
