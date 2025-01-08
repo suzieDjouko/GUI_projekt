@@ -107,6 +107,10 @@ class PaymentPage(QWidget):
             widget = self.dynamic_payment_layout.takeAt(i).widget()
             if widget:
                 widget.deleteLater()
+        #reversed(range(...)): Durchläuft die Indizes der Widgets in umgekehrter Reihenfolge
+        #takeAt(i): Entfernt ein Widget an einer bestimmten Position.
+        #deleteLater(): Löscht Widgets sauber aus dem Speicher.
+        #Nachher: Das Layout ist jetzt leer und bereit, neue Widgets aufzunehmen.
 
         method = self.payment_method_combo.currentText()
         if method == "Bank Transfer":
@@ -189,7 +193,7 @@ class PaymentPage(QWidget):
             file_path, _ = QFileDialog.getSaveFileName(self, "Save Booking as Text",
                             f"{self.user_name}_bookingconfirmation.txt", "Text Files (*.txt)")
             if file_path:
-                with open(file_path, "w") as file:
+                with open(file_path, "w") as file: #w ist Schreibmodus
                     file.write(f"Name: {self.user_name}\n")
                     file.write(f"Trip Number: {self.trip_data['Reisenummer']}\n")
                     file.write(f"Cabin Type: {self.cabin_type}\n")
@@ -197,6 +201,7 @@ class PaymentPage(QWidget):
                     file.write(
                         f"Address: {self.street_input.text().strip()}, "
                         f"{self.postal_code_input.text().strip()} {self.city_input.text().strip()}, Germany\n")
+
                     file.write(f"Phone: {self.phone_input.text().strip()}\n")
                     file.write(f"Payment Method: {self.payment_method_combo.currentText()}\n")
                     if hasattr(self, 'payment_input'):

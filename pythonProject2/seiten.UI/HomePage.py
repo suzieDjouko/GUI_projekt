@@ -476,7 +476,7 @@ class TravelApp(QMainWindow):
 
         self.selected_trip_data = row_data
 
-        #self.display_selected_ship_image(row_data['Schiffstyp'])
+        self.display_selected_ship_image(row_data['Schiffstyp'])
         self.display_cabin_images(row_data)
         self.stacked_widget.setCurrentWidget(self.cabin_page)
 
