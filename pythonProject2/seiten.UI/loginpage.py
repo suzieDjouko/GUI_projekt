@@ -12,7 +12,6 @@ import random
 
 
 conn = sqlite3.connect('User.sqlite')
-# Erstellt die connexion zur Database
 cursor = conn.cursor()
 
 cursor.execute('''
@@ -69,8 +68,6 @@ class LoginRegisterPage(QMainWindow):
         self.form_layout = QFormLayout()
         self.form_layout.setContentsMargins(20, 20, 20, 20)
         self.form_layout.setSpacing(20)
-
-
 
         # Benutzername Label und Eingabefeld
         username_label = QLabel("Benutzername:")
@@ -145,13 +142,11 @@ class LoginRegisterPage(QMainWindow):
         username = self.username_input.text()
         password = self.password_input.text()
 
-        #cursor.execute("SELECT * FROM User WHERE username=? AND password=?", (username, password))
-        #user = cursor.fetchone()
         cursor.execute("SELECT id, kontostand FROM User WHERE username=? AND password=?", (username, password))
         user = cursor.fetchone()
 
         if user:
-            user_id,current_kontostand = user # Tuple ou la ligne  du tableau que renvoi ma requette select plus haut
+            user_id,current_kontostand = user # Tupel
 
             #random Zahl
             additional_kontostand = random.randint(1000,3000)

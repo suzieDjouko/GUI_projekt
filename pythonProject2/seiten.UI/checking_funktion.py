@@ -1,8 +1,5 @@
-import os
-
-from PyQt5.QtWidgets import QMessageBox, QFileDialog
+from PyQt5.QtWidgets import QMessageBox
 import re
-from PyQt5.QtGui import QPixmap
 
 
 def is_valid_email(email):
@@ -10,8 +7,8 @@ def is_valid_email(email):
     return re.match(pattern, email) is not None
 def is_valid_street(street):
     pattern = r"^[A-Za-z\s]+\s+\d+$"
-    #\d represente n'importe quel chiffre numerique
-    #+indique que l'eliment peut apparaitre une ou plusieurs fois
+    #\d repräsentiert jede beliebige Ziffer(0–9)
+    #+ gibt an,  dass das Element einmal  oder mehrmals oder mehrmals
     return re.match(pattern, street) is not None
 
 def is_valid_postcode(postcode):
@@ -22,13 +19,9 @@ def is_valid_phone(phone):
     pattern = r"^(\+49|0)\s?[0-9]{9,}$"
     return re.match(pattern, phone) is not None
 def is_valid_bank_details(bank_details):
-    #"^[A-Za-z0-9\s\-]+$"
-    #pattern = r"^[A-Z]{2}[0-9]{2}[A-Za-z0-9\s\-]+$"
     pattern = r"^[A-Z]{2}[0-9]{20}$"
     return re.match(pattern, bank_details) is not None
 def is_valid_credit_card(credit_card):
-
-    # Pattern pour les cartes Visa, MasterCard, American Express, Discover
     pattern = r"^\d{16}$"
     return re.match(pattern, credit_card) is not None
 
@@ -67,7 +60,6 @@ def show_warning_message(title , message):
                 """)
     warning_box.exec_()
 def show_return_date_error(title, mess,info):
-    """   Zeigt eine Fehlermeldung an, wenn das Rückgabedatum inkompatibel ist.    """
     message = QMessageBox()
     message.setIcon(QMessageBox.Warning)
     message.setWindowTitle(title)

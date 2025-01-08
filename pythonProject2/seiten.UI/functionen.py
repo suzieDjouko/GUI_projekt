@@ -30,35 +30,6 @@ def load_data(file_path, parent_widget):
         parent_widget.show_error(f"Daten können nicht geladen werden : {e}")
     return None
 
-def filter_by_sea(selected_sea, dataframe):
-    return dataframe if selected_sea == "All" else dataframe[dataframe["Meerart"] == selected_sea]
-
-def filter_by_night( selected_night, dataframe):
-        min_nuits = max(1, selected_night - 2)  # Minimum von 1, um negative Werte zu vermeiden
-        max_nuits = selected_night + 2
-        return dataframe[
-            (dataframe["Übernachtungen"] >= min_nuits) &
-            (dataframe["Übernachtungen"] <= max_nuits)
-            ]
-def filter_by_ship(selected_ship, dataframe):
-    return dataframe if not selected_ship or selected_ship == "Choose a Ship" else dataframe[
-        dataframe["Schiffstyp"].str.contains(selected_ship, na=False, case=False)
-    ]
-
-def get_filtered_results(selected_sea, selected_night, selected_ship, selected_cities, dataframe):
-    """Alle Filter auf den Datenrahmen anwenden."""
-    filtered_df = filter_by_sea(selected_sea, dataframe)
-    filtered_df = filter_by_night(selected_night, filtered_df)
-    filtered_df = filter_by_ship(selected_ship, filtered_df)
-
-    if selected_cities:
-        def match_cities(cities):
-            if not isinstance(cities, str):
-                return False
-            return any(city.strip() in selected_cities for city in cities.split(","))
-        filtered_df = filtered_df[filtered_df["Besuchte_Städte"].apply(match_cities)]
-    return filtered_df
-
 def get_cabin_image_path(cabin_type):
     cabin_images= {
         "Innenkabine":"../images/Kabinentypen/Innenkabine.JPG",

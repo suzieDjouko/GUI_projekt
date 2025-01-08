@@ -49,7 +49,6 @@ class ReisezeitPage(QWidget):
         self.city_scroll_area.verticalScrollBar().setStyleSheet(city_section_style)
         self.city_scroll_area.horizontalScrollBar().setStyleSheet(city_section_style)
 
-
         self.city_scroll_area.setWidgetResizable(True)
         scrollable_layout.addWidget(self.city_scroll_area)
 
@@ -127,14 +126,11 @@ class ReisezeitPage(QWidget):
 
         self.gekauft_scroll_area.setWidget(self.gekauft_container)
 
-        # Set scrollable_widget as the widget of scroll_area
         scroll_area.setWidget(scrollable_widget)
         layout.addWidget(scroll_area)
         layout.addWidget(QLabel("<b>Purchased Products</b>"))
         layout.addWidget(self.gekauft_scroll_area)
 
-
-        # Bottom Buttons
         button_layout = QHBoxLayout()
         self.reisezeit_return_button = QPushButton("Return")
         self.reisezeit_return_button.setStyleSheet(back_button_style)
@@ -152,14 +148,11 @@ class ReisezeitPage(QWidget):
 
         self.setLayout(layout)
 
-
-
     def on_departure_date_changed(self, date):
         """
         Passt die Optionen für das Rückreisedatum an das Abreisedatum an.
         """
         self.return_date_edit.setMinimumDate(date.addDays(1))  # Das Rückreisedatum muss mindestens 1 Tag später liegen
-
 
     def on_validate_date_clicked(self):
         departure_date = self.departure_date_edit.date()

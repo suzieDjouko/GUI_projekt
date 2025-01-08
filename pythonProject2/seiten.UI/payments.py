@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QComboBox, QHBoxLayout, QLabel, QPushButton, QScrollArea
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QComboBox, QHBoxLayout, QLabel, QPushButton, QScrollArea, \
+    QFileDialog
 from styles import *
 from checking_funktion import *
 from database_action import update_user_balance

@@ -1,15 +1,11 @@
-import sys
-
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QHBoxLayout,
     QScrollArea, QComboBox, QSpinBox, QSizePolicy, QLineEdit,
     QSpacerItem, QStackedWidget, QFrame, QListWidget, QListWidgetItem, QLabel, QWidget, QVBoxLayout, QGridLayout,
     QPushButton
 )
-
-
 
 from styles import *
 from database_action import *
@@ -18,9 +14,6 @@ from checking_funktion import *
 
 from user_info import UserInfoWindow
 from reisezeit import ReisezeitPage
-
-
-
 
 
 class TravelApp(QMainWindow):
@@ -36,20 +29,15 @@ class TravelApp(QMainWindow):
 
         # Die Größe des Fensters auf 80% der Bildschirmgröße ändern
         self.resize(int(screen_width * 0.8), int(screen_height * 0.8))
-
         # Mindestmaße festlegen, um zu verhindern, dass das Fenster zu klein wird
         self.setMinimumSize(int(screen_width * 0.4), int(screen_height * 0.5))
-
         # Excel-Daten laden
         self.data_file = "../Schiffsreisen_cleaned.xlsx"
         self.df = load_data(self.data_file, self)
-
         # Ordnerpfade festlegen
         self.schiffstyp_folder = "../images/Schiffstypen"
-
         self.ship_combo = QComboBox(self)
         self.selected_cities = set()
-
         # Schnittstelle initialisieren
         self.init_ui()
 
@@ -144,9 +132,6 @@ class TravelApp(QMainWindow):
         self.headerLayout.addWidget(self.header_logo_logout_button)
 
         # MENU
-
-        # Erstellen Sie die Seiten
-
         self.stacked_widget = QStackedWidget(self)
 
         self.selection_page = QWidget()
@@ -155,13 +140,10 @@ class TravelApp(QMainWindow):
         self.user_profil = UserInfoWindow()
         self.user_profil.return_callback = lambda: self.stacked_widget.setCurrentWidget(self.selection_page)
 
-
         self.stacked_widget.addWidget(self.selection_page)
         self.stacked_widget.addWidget(self.result_page)
         self.stacked_widget.addWidget(self.cabin_page)
-
         self.stacked_widget.addWidget(self.user_profil)
-
 
         self.stacked_widget.setCurrentWidget(self.selection_page)
 
@@ -185,7 +167,6 @@ class TravelApp(QMainWindow):
         for button in menu_buttons:
             button.setStyleSheet(menu_style)
             self.menuLayout.addWidget(button)
-
 
         self.menu_selection_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.selection_page))
         self.menu_result_pushbutton.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.result_page))
@@ -213,9 +194,9 @@ class TravelApp(QMainWindow):
 
         self.nights_spin = QSpinBox()
         self.nights_spin.setStyleSheet(style_box)
-        self.nights_spin.setRange(0, 30)  # Inclure 0 comme état "non défini"
-        self.nights_spin.setSpecialValueText("undefine")  # Afficher "Non défini" lorsque la valeur est 0
-        self.nights_spin.setValue(0)  # Définir la valeur initiale à "non défini"
+        self.nights_spin.setRange(0, 30)
+        self.nights_spin.setSpecialValueText("undefine")  # set undefine when value = 0
+        self.nights_spin.setValue(0)  # undefine => 0
         self.nights_spin.valueChanged.connect(self.on_filters_changed)
         nights_layout.addWidget(QLabel("Number of Nights :"))
         nights_layout.addWidget(self.nights_spin)
@@ -233,7 +214,6 @@ class TravelApp(QMainWindow):
         self.city_scroll_area.verticalScrollBar().setStyleSheet(city_section_style)
         selection_layout.addWidget(self.city_scroll_area)
 
-
         # Sektion Schiffstypen
         ship_selection_layout = QHBoxLayout()
         ship_selection_layout.setContentsMargins(0, 0, 0, 20)
@@ -242,12 +222,10 @@ class TravelApp(QMainWindow):
         self.ship_combo.setStyleSheet(style_box)
         self.ship_combo.currentTextChanged.connect(self.display_selected_ship_image)
 
-
         self.ship_image_label = QLabel()
         self.ship_image_label.setFixedSize(280, 250)
         self.ship_image_label.setAlignment(Qt.AlignCenter)
         self.ship_image_label.setStyleSheet("border: 1px solid #60a698;")
-
 
         ship_selection_layout.addWidget(QLabel("Type of Ship: "))
         ship_selection_layout.addWidget(self.ship_combo)
@@ -280,11 +258,13 @@ class TravelApp(QMainWindow):
         self.selection_scroll_Area.setWidget(self.selection_widget)
 
         selection_page_layout = QVBoxLayout(self.selection_page)
+
         selection_page_layout.addWidget(self.selection_scroll_Area)
         selection_page_layout.addLayout(buttons_layout)
 
         ##SEITE ERGEBNIS
         self.result_layout = QVBoxLayout()
+
         self.result_label = QLabel("List of Trips:")
         self.result_layout.addWidget(self.result_label)
         self.result_list = QListWidget()
@@ -294,30 +274,24 @@ class TravelApp(QMainWindow):
         self.return_button.setStyleSheet(back_button_style)
         self.return_button.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.selection_page))
         self.result_layout.addWidget(self.return_button)
-
         self.result_page.setLayout(self.result_layout)
 
         #SEITE KABINEN
-
         self.cabin_layout = QVBoxLayout()
 
         self.cabin_summary_label = QLabel()
         self.cabin_summary_label.setAlignment(Qt.AlignTop)
         self.cabin_summary_label.setStyleSheet("font-size: 18px; font-weight: bold; margin-bottom: 10px;")
-        #self.cabin_layout.addWidget(self.cabin_summary_label)
         back_button = QPushButton("Return")
         back_button.setStyleSheet(back_button_style)
-        back_button.clicked.connect(self.on_back_to_results_clicked)  # Connecter au retour
+        back_button.clicked.connect(self.on_back_to_results_clicked)
 
         self.cabin_scroll_area = QScrollArea()
         self.cabin_scroll_area.verticalScrollBar().setStyleSheet(city_section_style)
-
         self.cabin_scroll_area.setWidgetResizable(True)
-
 
         cabin_content_widget = QWidget()
         cabin_content_widget.setLayout(self.cabin_layout)
-
         self.cabin_scroll_area.setWidget(cabin_content_widget)
 
         cabin_page_layout = QVBoxLayout()
@@ -326,24 +300,19 @@ class TravelApp(QMainWindow):
         cabin_page_layout.addWidget(back_button)
         self.cabin_page.setLayout(cabin_page_layout)
 
-        # SEITE DATUMSAUSWAHL
-
 
         #PAYEMENT
         self.payment_layout = QVBoxLayout()
 
         self.total_price_label = QLabel("Total Price: €0")
-
         self.payment_layout.addWidget(self.total_price_label)
 
         main_layout = QVBoxLayout()
         main_layout.addLayout(self.headerLayout)
         main_layout.addLayout(self.menuLayout)
-        self.selection_page.setLayout(selection_layout)
-
-
         main_layout.addWidget(self.stacked_widget)
-        # Configurer la fenêtre principale
+
+        # Konfiguriere das Hauptfenster
         container = QWidget()
         container.setContentsMargins(20, 20, 20, 20)
         container.setLayout(main_layout)
@@ -352,40 +321,43 @@ class TravelApp(QMainWindow):
 
     def get_filtered_results(self):
 
-            # Filterwerte erhalten
-            df_filtered = self.df.copy()
+        """filtert den DataFrame self.df basierend auf Benutzerkriterien wie Meer, Nächte, Schiff und besuchte Städte.
+        Sie gibt einen gefilterten DataFrame zurück, nachdem alle ausgewählten Filter angewendet wurden."""
 
-            # Nach Meer filtern
-            selected_sea = self.sea_combo.currentText()
+        # Filterwerte erhalten
+        df_filtered = self.df.copy()
 
-            if selected_sea != "All":
-                df_filtered = self.filter_by_sea(selected_sea, df_filtered)
+        # Nach Meer filtern
+        selected_sea = self.sea_combo.currentText()
 
-            # Nach Nacht filtern, falls festgelegt
-            selected_night = self.nights_spin.value()
-            if selected_night != 0:
-                df_filtered = self.filter_by_night(selected_night, df_filtered)
-            #wenn mindestens eine Stadt in der Spalte „Besuchte Städte“ enthalten ist
+        if selected_sea != "All":
+            df_filtered = self.filter_by_sea(selected_sea, df_filtered)
 
-            #fiter bei ship
-            self.selected_ship = self.ship_combo.currentText()
-            if self.selected_ship and self.selected_ship != "Choose a Ship":
-                df_filtered = self.filter_by_ship(self.selected_ship, df_filtered)
+        # Nach Nacht filtern, falls festgelegt
+        selected_night = self.nights_spin.value()
+        if selected_night != 0:
+            df_filtered = self.filter_by_night(selected_night, df_filtered)
+        #wenn mindestens eine Stadt in der Spalte „Besuchte Städte“ enthalten ist
 
-            if self.selected_cities:
-                def match_cities(cities):
-                    if not isinstance(cities, str):  # Sicherheit vor nicht-textuellen Werten
-                        return False
-                    return any(city.strip() in self.selected_cities for city in cities.split(","))
+        #filter bei ship
+        self.selected_ship = self.ship_combo.currentText()
+        if self.selected_ship and self.selected_ship != "Choose a Ship":
+            df_filtered = self.filter_by_ship(self.selected_ship, df_filtered)
 
-                df_filtered = df_filtered[df_filtered["Besuchte_Städte"].apply(match_cities)]
+        if self.selected_cities:
+            def match_cities(cities):
+                if not isinstance(cities, str):  # Sicherheit vor nicht-textuellen Werten
+                    return False
+                return any(city.strip() in self.selected_cities for city in cities.split(","))
 
-            print(f"Filtrage par Meerart : {selected_sea}")
-            print(f"Filtrage par Übernachtungen : {selected_night}")
-            print(f"Villes sélectionnées : {self.selected_cities}")
+            df_filtered = df_filtered[df_filtered["Besuchte_Städte"].apply(match_cities)]
 
-            return df_filtered
-    def add_result_item_with_cabins(self, row_data):
+        print(f"Filtrage par Meerart : {selected_sea}")
+        print(f"Filtrage par Übernachtungen : {selected_night}")
+        print(f"Villes sélectionnées : {self.selected_cities}")
+
+        return df_filtered
+    def add_result_item_and_choose_btn(self, row_data):
         """
         Add a trip to the QListWidget with details on one line and a "Choose" button aligned to the right.
         """
@@ -431,7 +403,7 @@ class TravelApp(QMainWindow):
         except Exception as e:
             print(f"Error adding item: {e}")
 
-    def display_result_table(self, filtered_data):
+    def display_result_list(self, filtered_data):
         """Display filtered trips in the QListWidget with details on one line."""
         self.result_list.clear()  # Reset the list
 
@@ -441,18 +413,19 @@ class TravelApp(QMainWindow):
 
         # Add each trip to the list
         for _, row_data in filtered_data.iterrows():
-            self.add_result_item_with_cabins(row_data)
+            self.add_result_item_and_choose_btn(row_data)
 
         self.result_label.setText("Results found:")
 
     def on_pay_clicked(self, cabin_type, cabin_price, row_data):
+        """Die Methode on_pay_clicked erstellt eine neue Seite 5(Objekt)für die Reisezeit mit den übergebenen Daten (Kabinentyp, Preis, Reiseinformationen)
+        und wechselt im gestapelten Widget zu dieser Seite."""
         try:
             self.selected_cabin_type = cabin_type
             self.selected_cabin_price = cabin_price
             self.trip_data = row_data
             self.user_balance = get_user_balance(self.header_user_name_edit.text())
 
-            # Créer une nouvelle instance de ReisezeitPage avec les données à jour
             reisezeit_page = ReisezeitPage(
                 trip_data=self.trip_data,
                 cabin_type=self.selected_cabin_type,
@@ -481,14 +454,12 @@ class TravelApp(QMainWindow):
 
     def on_search_button_clicked(self):
         filtered_results = self.get_filtered_results()
-        self.display_result_table(filtered_results)
+        self.display_result_list(filtered_results)
         self.stacked_widget.setCurrentWidget(self.result_page)
 
     def on_choose_button_clicked(self, row_data):
         """Verwaltet die Auswahl einer Reise durch den Nutzer."""
-        # Zeige eine Bestätigungsnachricht
         # Zeige Bilder der Kabinen für diese Reise
-
         self.selected_cabin_type = None
 
         trip_details = (
@@ -509,7 +480,7 @@ class TravelApp(QMainWindow):
 
     def display_cabin_images(self, row_data):
         clear_layout(self.cabin_layout)
-
+        #create a dictionary
         cabin_details = {
             "Innenkabine": "Comfortable and budget-friendly, ideal for travelers seeking functionality.",
             "Aussenkabine": "Bright and serene with a porthole view of the sea.",
@@ -522,7 +493,7 @@ class TravelApp(QMainWindow):
         user_balance = get_user_balance(self.header_user_name_edit.text())  # Get user balance dynamically
 
         for cabin_type, description in cabin_details.items():
-            cabin_price = row_data.get(cabin_type, "not available")  # Kabinenpreis abrufen oder „nicht verfügbar“
+            cabin_price = row_data.get(cabin_type)  # Kabinenpreis abrufen oder „nicht verfügbar“
             image_path = get_cabin_image_path(cabin_type)  # Abrufen des Bildpfads für die Kabine
 
             # Display cabin image and information
@@ -603,9 +574,8 @@ class TravelApp(QMainWindow):
             self.cabin_layout.addWidget(separator)
 
 
-
     def load_ship_types(self):
-        """Laden Sie die Schiffstypen in die Dropdownleiste."""
+        """Laden der Schiffstypen in die Dropdownleiste."""
         if not os.path.exists(self.schiffstyp_folder):
             self.ship_combo.addItem("No ship available")
             return
@@ -674,7 +644,7 @@ class TravelApp(QMainWindow):
             # Zum Raster hinzufügen
             grid_layout.addWidget(city_widget, row, col)
             col += 1
-            if col > 3:  # 4 colonnes max
+            if col > 3:
                 col = 0
                 row += 1
 
@@ -698,7 +668,7 @@ class TravelApp(QMainWindow):
 
             print("Aktualisierte Städte")
             filtered_results = self.get_filtered_results()
-            self.display_result_table(filtered_results)
+            self.display_result_list(filtered_results)
 
             # Schiffstypen aktualisieren
             self.update_ship_types()

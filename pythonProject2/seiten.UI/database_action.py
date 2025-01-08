@@ -1,9 +1,9 @@
 import sqlite3
 
-
 conn = sqlite3.connect('User.sqlite')
 cursor = conn.cursor()
 conn.execute('PRAGMA foreign_keys = ON')
+
 
 def get_user_balance(name):
     conn = sqlite3.connect('User.sqlite')
@@ -15,14 +15,13 @@ def get_user_balance(name):
     balance = cursor.fetchone()
     return balance[0] if balance else 0
 
-import sqlite3
 
 def update_user_balance(username, new_balance):
     """
     Aktualisiert den Kontostand des Nutzers in der Datenbank.
     """
     try:
-        conn = sqlite3.connect('User.sqlite')  # Chemin vers votre base de données SQLite
+        conn = sqlite3.connect('User.sqlite')
         cursor = conn.cursor()
         cursor.execute("UPDATE User SET kontostand = ? WHERE username = ?", (new_balance, username))
         conn.commit()
@@ -31,11 +30,9 @@ def update_user_balance(username, new_balance):
         print(f"Fehler bei der Aktualisierung des Saldos : {e}")
         raise
 
+
 def get_user_info(header_user_name_edit):
-        """
-        Rufen Sie die Benutzerinformationen aus der Datenbank ab.
-        Passen Sie diese Methode an die Struktur Ihrer Datenbank an.
-        """
+        # Ruft die Benutzerinformationen aus der Datenbank ab.
         try:
             username = header_user_name_edit.text()
             cursor.execute("SELECT id,username, email, kontostand FROM User WHERE username = ?", (username,))

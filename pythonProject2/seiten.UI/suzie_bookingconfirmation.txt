@@ -1,8 +1,0 @@
-Name: suzie
-Trip Number: 14
-Cabin Type: Luxuskabine3
-Price: 4999 €
-Address: hdgztt 6, 12345 Worms, Germany
-Phone: 0987654321123344556
-Payment Method: Bank Transfer
-Bank Details: LK12345678909876512345
