@@ -3,7 +3,7 @@ __# BlauWelle - GUI zur Auswahl von Schiffsreisen
 ### 1.1 Projektbeschreibung
 
 - Funktion 1: Auswahl der Meerart
-- Funktion 2: Filterung nach N�chten
+- Funktion 2: Filterung nach Naechten
 - Funktion 3: Reisezeitplanung
 
 ---
@@ -62,7 +62,28 @@ __# BlauWelle - GUI zur Auswahl von Schiffsreisen
 
 ---
 
+### Login page 
+![login_page.png](login_page.png)
+---
 
+### Regitrierung Page
+![registrierung_page.png](registrierung_page.png)
+---
 
+### Selection Page
+![selection_page.png](selection_page.png)
+---
 
+### Result_list Page
+![result_list_page.png](result_list_page.png)
+---
 
+### Cabine Page
+![cabine_page.png](cabine_page.png)
+---
+
+### reisezeit Page
+![reisezeit_page.png](reisezeit_page.png)
+
+### Payment Page
+![payment_page.png](payment_page.png)
