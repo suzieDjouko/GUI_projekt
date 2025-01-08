@@ -230,6 +230,7 @@ class TravelApp(QMainWindow):
         ship_selection_layout.addWidget(QLabel("Type of Ship: "))
         ship_selection_layout.addWidget(self.ship_combo)
         ship_selection_layout.addWidget(self.ship_image_label)
+        selection_layout.addSpacing(40)
         selection_layout.addLayout(ship_selection_layout)
 
         # Schaltflächen Zurücksetzen und Suchen
@@ -270,6 +271,7 @@ class TravelApp(QMainWindow):
         self.result_list = QListWidget()
         self.result_list.setStyleSheet(Qlist_style)
         self.result_layout.addWidget(self.result_list)
+        self.result_layout.addSpacing(30)
         self.return_button = QPushButton("Return")
         self.return_button.setStyleSheet(back_button_style)
         self.return_button.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.selection_page))
@@ -297,6 +299,7 @@ class TravelApp(QMainWindow):
         cabin_page_layout = QVBoxLayout()
         cabin_page_layout.addWidget(self.cabin_summary_label)
         cabin_page_layout.addWidget(self.cabin_scroll_area)
+        cabin_page_layout.addSpacing(30)
         cabin_page_layout.addWidget(back_button)
         self.cabin_page.setLayout(cabin_page_layout)
 

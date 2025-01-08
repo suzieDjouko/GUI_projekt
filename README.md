@@ -1,2 +1,0 @@
-# GUI_projekt
-Schiffsreisen

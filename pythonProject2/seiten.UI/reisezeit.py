@@ -37,6 +37,8 @@ class ReisezeitPage(QWidget):
         scroll_area.setWidgetResizable(True)
         scrollable_widget = QWidget()
         scrollable_layout = QVBoxLayout(scrollable_widget)
+        scrollable_layout.setContentsMargins(20, 20, 20, 20)
+
 
         # Trip Details Label
         self.trip_details_label = QLabel()
@@ -91,6 +93,7 @@ class ReisezeitPage(QWidget):
         self.return_date_edit.setMinimumDate(QDate(2025, 5, 2))
         self.return_date_edit.setMaximumDate(QDate(2025, 10, 31))
         scrollable_layout.addWidget(self.return_date_edit)
+        scrollable_layout.addSpacing(30)
 
         # Date Buttons
         date_button_layout = QHBoxLayout()
@@ -122,14 +125,17 @@ class ReisezeitPage(QWidget):
 
         self.gekauft_layout = QVBoxLayout(self.gekauft_container)
         self.gekauft_layout.setContentsMargins(20, 10, 20, 10)
-        self.gekauft_layout.setSpacing(15)
+        self.gekauft_layout.setSpacing(5)
 
         self.gekauft_scroll_area.setWidget(self.gekauft_container)
 
         scroll_area.setWidget(scrollable_widget)
         layout.addWidget(scroll_area)
+        layout.addSpacing(40)
+
         layout.addWidget(QLabel("<b>Purchased Products</b>"))
         layout.addWidget(self.gekauft_scroll_area)
+        layout.addSpacing(40)
 
         button_layout = QHBoxLayout()
         self.reisezeit_return_button = QPushButton("Return")

@@ -30,6 +30,8 @@ class PaymentPage(QWidget):
         scrollable_widget = QWidget()
         scrollable_layout = QVBoxLayout(scrollable_widget)
         scroll_area.setWidget(scrollable_widget)
+        scrollable_layout.setContentsMargins(20, 0, 20, 40)
+
 
 
         scrollable_layout.addWidget(QLabel(f"<b>Trip Number:</b> {trip_data['Reisenummer']}"))
@@ -90,6 +92,7 @@ class PaymentPage(QWidget):
         button_layout.addWidget(self.confirm_button)
 
         layout.addWidget(scroll_area)
+        layout.addSpacing(30)
         layout.addLayout(button_layout)
         self.setLayout(layout)
 
