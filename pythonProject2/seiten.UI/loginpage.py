@@ -143,7 +143,7 @@ class LoginRegisterPage(QMainWindow):
         password = self.password_input.text()
 
         cursor.execute("SELECT id, kontostand FROM User WHERE username=? AND password=?", (username, password))
-        user = cursor.fetchone()
+        user = cursor.fetchone() #contient id et kontostand
 
         if user:
             user_id,current_kontostand = user # Tupel
