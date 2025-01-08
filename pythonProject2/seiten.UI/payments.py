@@ -75,7 +75,7 @@ class PaymentPage(QWidget):
 
         self.dynamic_payment_layout = QVBoxLayout()
         scrollable_layout.addLayout(self.dynamic_payment_layout)
-        self.update_payment_fields()
+        #self.update_payment_fields()
 
         button_layout = QHBoxLayout()
 
