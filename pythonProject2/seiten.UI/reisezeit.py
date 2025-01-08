@@ -9,6 +9,7 @@ from checking_funktion import show_return_date_error, clear_layout
 from payments import PaymentPage
 from database_action import get_user_balance
 from styles import city_section_style
+from functionen import get_cabin_image_path
 
 class ReisezeitPage(QWidget):
     def __init__(self, trip_data, cabin_type, cabin_price, user_balance, user_name, stacked_widget, konto_edit, payment_page, cabin_page, parent=None):
@@ -294,7 +295,9 @@ class ReisezeitPage(QWidget):
                 self.ship_image_label.setText("No image available")
 
             # Das Bild der ausgewählten Kabine aktualisieren
-            cabin_image_path = f"../images/Kabinentypen/{self.cabin_type}.jpg"
+            #cabin_image_path = f"../images/Kabinentypen/{self.cabin_type}.jpg"
+            cabin_image_path = get_cabin_image_path(self.cabin_type)
+
             if os.path.exists(cabin_image_path):
                 self.cabin_image_label.setPixmap(
                     QPixmap(cabin_image_path).scaled(300, 250, Qt.KeepAspectRatio))
